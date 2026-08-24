@@ -10,7 +10,7 @@ export const siteContent = {
     eyebrow: "PLAY BEYOND THE SCREEN",
     title: "MAKE EVERY DAY MORE FUN",
     cta: "SHOP ZIPSTRING",
-    note: "Easy returns • Delivery across Pakistan",
+    note: "Screen-free activity toy • Delivery across Pakistan",
     media: media("hero", "https://images.unsplash.com/photo-1594736797933-d0501ba2fe65?auto=format&fit=crop&w=1800&q=85", "Colorful light trails in a dark creative space", "#05183d", "16 / 9"),
   },
   press: ["PAKISTAN FAVOURITE", "SCREEN-FREE FUN", "FAMILY PLAY", "100+ TRICKS", "GLOW-IN-THE-DARK"],
@@ -38,7 +38,7 @@ const commonBenefits = [
 
 export const products: Product[] = [
   {
-    id: "zipstring-original", name: "ZipString Original", kicker: "BRAND NEW", description: "Launch the glowing string, master 100+ tricks, and bring playtime beyond the screen.", category: "Best Sellers", price: 899900, rating: 4.9, reviews: 1273, badge: "HIT", swatches: ["#11ffc3", "#5a7dff", "#ff4fa3"],
+    id: "zipstring-original", name: "ZipString Original", kicker: "BRAND NEW", description: "A rechargeable, screen-free activity toy for kids. Launch the glowing string, master 100+ tricks, and bring playtime beyond the screen.", category: "Best Sellers", price: 899900, rating: 4.9, reviews: 1273, badge: "HIT", swatches: ["#11ffc3", "#5a7dff", "#ff4fa3"],
     media: [
       media("zipstring-1", "https://images.unsplash.com/photo-1531058020387-3be344556be6?auto=format&fit=crop&w=1100&q=85", "Neon blue and magenta light installation", "#06d5ee"),
       media("zipstring-2", "https://images.unsplash.com/photo-1519608487953-e999c86e7455?auto=format&fit=crop&w=1100&q=85", "Blue night sky and glowing horizon", "#2856d9"),
@@ -50,8 +50,8 @@ export const products: Product[] = [
       { id: "four", label: "4 ZIPSTRING", quantity: 4, unitPrice: 764900, compareAt: 899900, badge: "SAVE 15%" },
     ],
   },
-  { id: "zipstring-glow", name: "ZipString Glow", description: "A brighter glow string made for unforgettable night-time tricks.", category: "Best Sellers", price: 699900, compareAt: 799900, rating: 4.8, reviews: 918, badge: "SAVE 13%", swatches: ["#14f195", "#ffcf33"], media: [media("zipstring-glow", "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1000&q=80", "Bright colorful outdoor light", "#31e9bf")], benefits: commonBenefits, bundles: [] },
-  { id: "zipstring-colors", name: "ZipString Colors", description: "Choose your favourite colour and show off new tricks with friends.", category: "Best Sellers", price: 549900, rating: 4.7, reviews: 682, swatches: ["#ff5f57", "#5ac8fa", "#ff2d9a", "#bdff38"], media: [media("pop", "https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&w=1000&q=80", "Colorful retro gaming console", "#ff5f57")], benefits: commonBenefits, bundles: [] },
+  { id: "zipstring-glow", name: "ZipString Glow", description: "A glow-in-the-dark toy made for bright night-time tricks and active play with friends.", category: "Best Sellers", price: 699900, compareAt: 799900, rating: 4.8, reviews: 918, badge: "SAVE 13%", swatches: ["#14f195", "#ffcf33"], media: [media("zipstring-glow", "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1000&q=80", "Bright colourful light at night", "#31e9bf")], benefits: commonBenefits, bundles: [] },
+  { id: "zipstring-colors", name: "ZipString Colors", description: "A colourful interactive toy for kids who love movement, creative tricks, and playing with friends.", category: "Best Sellers", price: 549900, rating: 4.7, reviews: 682, swatches: ["#ff5f57", "#5ac8fa", "#ff2d9a", "#bdff38"], media: [media("pop", "https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&w=1000&q=80", "Colourful retro gaming console", "#ff5f57")], benefits: commonBenefits, bundles: [] },
   { id: "zipstring-pack", name: "ZipString String Pack", description: "Extra glow strings for more colours, more tricks, and more fun.", category: "String Packs", price: 149900, rating: 4.9, reviews: 341, swatches: ["#22ef8c", "#ff7a00", "#ff4fa3", "#78ff44"], media: [media("pack", "https://images.unsplash.com/photo-1519608487953-e999c86e7455?auto=format&fit=crop&w=1000&q=80", "Colorful glow against the night sky", "#743bff")], benefits: commonBenefits, bundles: [] },
 ];
 
