@@ -1,0 +1,5 @@
+import type { Product } from "@/lib/storefront/types";
+const base = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+export const organizationJsonLd = { "@context": "https://schema.org", "@type": "Organization", name: "Pixels Galaxy", url: base, logo: `${base}/brand/pixels-galaxy-logo.png` };
+export const websiteJsonLd = { "@context": "https://schema.org", "@type": "WebSite", name: "Pixels Galaxy", url: base, description: "Bright, kinetic play made for curious minds." };
+export function buildProductJsonLd(product: Product) { return { "@context": "https://schema.org", "@type": "Product", name: product.name, image: product.media.map((x) => x.src), description: product.description, sku: product.id, brand: { "@type": "Brand", name: "Pixels Galaxy" }, aggregateRating: { "@type": "AggregateRating", ratingValue: product.rating, reviewCount: product.reviews }, offers: { "@type": "Offer", url: `${base}/#featured`, priceCurrency: "USD", price: (product.price / 100).toFixed(2), availability: "https://schema.org/InStock" } }; }
