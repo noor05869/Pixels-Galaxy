@@ -17,6 +17,7 @@
     "react": "latest",
     "react-dom": "latest",
     "resend": "^6.22.1",
+    "server-only": "^0.0.1",
     "zod": "^4.4.3"
   },
   "devDependencies": {

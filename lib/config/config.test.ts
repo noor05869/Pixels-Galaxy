@@ -1,5 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
+vi.mock("server-only", () => ({}));
+
 const serverEnvironment = {
   NEXT_PUBLIC_SITE_URL: "https://store.example.pk",
   SUPABASE_URL: "https://project-ref.supabase.co",
