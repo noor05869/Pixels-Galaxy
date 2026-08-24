@@ -1,0 +1,2 @@
+import { siteContent } from "@/lib/storefront/content";
+export function AwardsMarquee(){const awards=[...siteContent.press,...siteContent.press];return <section className="awards-marquee" aria-label="Recognition"><div className="awards-track">{awards.map((name,index)=><strong key={`${name}-${index}`} aria-hidden={index>=siteContent.press.length}>{name}</strong>)}</div><div className="awards-track reflected" aria-hidden="true">{awards.map((name,index)=><strong key={`${name}-reflection-${index}`}>{name}</strong>)}</div></section>}

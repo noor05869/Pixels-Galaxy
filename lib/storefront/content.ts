@@ -55,6 +55,15 @@ export const products: Product[] = [
   { id: "comet-pack", name: "Comet Pixel Pack", description: "Replacement glow loops in a five-color cosmic mix.", category: "Pixel Packs", price: 2200, rating: 4.9, reviews: 341, swatches: ["#22ef8c", "#ff7a00", "#ff4fa3", "#78ff44"], media: [media("pack", "https://images.unsplash.com/photo-1519608487953-e999c86e7455?auto=format&fit=crop&w=1000&q=80", "Colorful glow against the night sky", "#743bff")], benefits: commonBenefits, bundles: [] },
 ];
 
+products[0].media[0].hoverVideo = "/videos/v1.mp4";
+products[0].media[0].actionLabel = "VIEW PRODUCT";
+products[1].media[0].hoverVideo = "/videos/v2.mp4";
+products[1].media[0].actionLabel = "ADD TO CART";
+products[2].media[0].hoverVideo = "/videos/v3.mp4";
+products[2].media[0].actionLabel = "VIEW PRODUCT";
+products[3].media[0].hoverVideo = "/videos/v4.mp4";
+products[3].media[0].actionLabel = "ADD TO CART";
+
 export const featuredProduct = products[0];
 
 export const trickTiles: MediaTile[] = [

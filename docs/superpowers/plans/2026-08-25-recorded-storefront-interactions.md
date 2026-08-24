@@ -14,11 +14,11 @@
 
 - Preserve Pixels Galaxy branding, copy, products, prices, cart behavior, and current full-width video hero.
 - Do not add ZipString logos, product names, or branded imagery.
-- Do not add backend checkout, network form submission, or third-party animation/carousel dependencies.
+- Do not add backend checkout or network form submission. Prefer native CSS/React motion; a focused animation dependency is allowed only when it materially improves the recorded behavior.
 - Use transforms and opacity for motion; avoid layout-triggering animation properties.
 - Respect `prefers-reduced-motion: reduce` by disabling autoplay-on-hover, marquees, reveal transforms, decorative rotation, and parallax.
 - Maintain keyboard equivalence for every hover-revealed action through `:focus-within` or always-visible mobile controls.
-- Do not commit or modify the untracked files `assets/videos/main banner2.mp4`, `assets/videos/v1.mp4`, `assets/videos/v2.mp4`, or `assets/videos/v3.mp4` unless the user separately assigns them.
+- Copy `assets/videos/main banner2.mp4` and `assets/videos/v1.mp4` through `v4.mp4` into public media and use all supplied clips across promotional, product-card, and media-grid interactions; duplicate use is explicitly allowed.
 - Do not add a unit-test suite; verify with production builds and explicit desktop/mobile browser checks, as previously requested.
 
 ---

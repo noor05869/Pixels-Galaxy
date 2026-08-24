@@ -14,5 +14,8 @@ import { SiteFooter } from "@/components/layout/SiteFooter";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { buildProductJsonLd, organizationJsonLd, websiteJsonLd } from "@/lib/seo/jsonLd";
 import { featuredProduct } from "@/lib/storefront/content";
+import { ScrollHeader } from "@/components/layout/ScrollHeader";
+import { AwardsMarquee } from "@/components/sections/AwardsMarquee";
+import { QuickPurchaseBar } from "@/components/cart/QuickPurchaseBar";
 
-export default function Home() { return <><JsonLd data={organizationJsonLd} /><JsonLd data={websiteJsonLd} /><JsonLd data={buildProductJsonLd(featuredProduct)} /><AnnouncementBar /><SiteHeader /><main id="main-content"><HeroSection /><PressStrip /><TrustMetrics /><BestSellers /><PromoBanner /><FeaturedProduct /><TricksGrid /><Testimonials /><SocialFeed /><BrandStory /></main><SiteFooter /></>; }
+export default function Home() { return <><JsonLd data={organizationJsonLd} /><JsonLd data={websiteJsonLd} /><JsonLd data={buildProductJsonLd(featuredProduct)} /><AnnouncementBar /><ScrollHeader><SiteHeader /></ScrollHeader><main id="main-content"><HeroSection /><PressStrip /><TrustMetrics /><BestSellers /><PromoBanner /><FeaturedProduct /><TricksGrid /><Testimonials /><SocialFeed /><AwardsMarquee /><BrandStory /></main><SiteFooter /><QuickPurchaseBar /></>; }

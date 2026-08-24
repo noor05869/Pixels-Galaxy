@@ -6,6 +6,8 @@ export type ProductMedia = {
   poster?: string;
   aspectRatio: string;
   accent: string;
+  hoverVideo?: string;
+  actionLabel?: "ADD TO CART" | "VIEW PRODUCT";
 };
 
 export type BundleOffer = {

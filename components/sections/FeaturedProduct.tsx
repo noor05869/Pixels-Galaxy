@@ -1,4 +1,5 @@
 import { featuredProduct } from "@/lib/storefront/content";
 import { ProductGallery } from "@/components/store/ProductGallery";
 import { PurchasePanel } from "@/components/store/PurchasePanel";
-export function FeaturedProduct() { return <section id="featured" className="featured"><ProductGallery media={featuredProduct.media} /><PurchasePanel product={featuredProduct} /></section>; }
+import { RotatingBadge } from "@/components/ui/RotatingBadge";
+export function FeaturedProduct() { return <section id="featured" className="featured"><div className="featured-gallery-wrap"><RotatingBadge text="PIXELS • GALAXY • BEST SELLER •" /><ProductGallery media={featuredProduct.media} /></div><PurchasePanel product={featuredProduct} /></section>; }
