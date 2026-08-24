@@ -4,7 +4,7 @@ import type { CartLine } from "@/lib/cart/types";
 
 type CartValue = { lines: CartLine[]; totalQuantity: number; isOpen: boolean; addItem: (line: CartLine) => void; updateQuantity: (id: string, quantity: number) => void; removeItem: (id: string) => void; openCart: () => void; closeCart: () => void };
 const CartContext = createContext<CartValue | null>(null);
-const key = "pixels-galaxy-cart-v1";
+const key = "pixels-galaxy-cart-v2";
 const clamp = (n: number) => Math.max(1, Math.min(99, Math.round(n)));
 
 export function CartProvider({ children }: { children: React.ReactNode }) {

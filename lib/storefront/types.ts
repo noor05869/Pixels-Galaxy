@@ -24,7 +24,7 @@ export type Product = {
   name: string;
   kicker?: string;
   description: string;
-  category: "Best Sellers" | "Pixel Packs";
+  category: "Best Sellers" | "String Packs";
   price: number;
   compareAt?: number;
   rating: number;
