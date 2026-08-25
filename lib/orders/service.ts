@@ -72,7 +72,7 @@ export function createOrderService(
         total: pricedOrder.total,
         status: "new",
         items: pricedOrder.items,
-        notificationState: "pending",
+        notificationState: "failed",
       },
       dependencies,
     );
@@ -80,16 +80,7 @@ export function createOrderService(
     try {
       await dependencies.notify(savedOrder);
     } catch {
-      try {
-        await dependencies.repository.setNotificationState(
-          savedOrder.id,
-          "failed",
-          "Order notification failed",
-        );
-      } catch {
-        // The order is already durable. Never invite a duplicate customer retry.
-      }
-
+      // The pessimistic durable state already records this delivery failure.
       return { orderNumber: savedOrder.orderNumber };
     }
 

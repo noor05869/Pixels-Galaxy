@@ -25,7 +25,11 @@ describe("POST /api/orders", () => {
   it("rejects non-JSON requests with 415 before consuming an attempt", async () => {
     const { createPostHandler } = await import("./route");
     const attempt = vi.fn(() => true);
-    const handler = createPostHandler({ submitOrder: vi.fn(), attempt });
+    const handler = createPostHandler({
+      submitOrder: vi.fn(),
+      attempt,
+      clientIpHeader: "x-test-client-ip",
+    });
 
     const response = await handler(
       new Request("https://store.example.pk/api/orders", {
@@ -43,7 +47,11 @@ describe("POST /api/orders", () => {
   it("rejects request bodies over 32 KB with 413", async () => {
     const { createPostHandler } = await import("./route");
     const attempt = vi.fn(() => true);
-    const handler = createPostHandler({ submitOrder: vi.fn(), attempt });
+    const handler = createPostHandler({
+      submitOrder: vi.fn(),
+      attempt,
+      clientIpHeader: "x-test-client-ip",
+    });
     const response = await handler(
       new Request("https://store.example.pk/api/orders", {
         method: "POST",
@@ -60,7 +68,11 @@ describe("POST /api/orders", () => {
   it("returns 400 for invalid checkout input before consuming an attempt", async () => {
     const { createPostHandler } = await import("./route");
     const attempt = vi.fn(() => true);
-    const handler = createPostHandler({ submitOrder: vi.fn(), attempt });
+    const handler = createPostHandler({
+      submitOrder: vi.fn(),
+      attempt,
+      clientIpHeader: "x-test-client-ip",
+    });
 
     const response = await handler(jsonRequest({ ...checkout, phone: "123" }));
 
@@ -80,12 +92,13 @@ describe("POST /api/orders", () => {
         attemptedKeys.push(key);
         return limiter.attempt(key);
       },
+      clientIpHeader: "x-test-client-ip",
     });
 
     const responses = [];
     for (let attempt = 0; attempt < 6; attempt += 1) {
       responses.push(
-        await handler(jsonRequest(checkout, { "x-forwarded-for": "203.0.113.42, 10.0.0.2" })),
+        await handler(jsonRequest(checkout, { "x-test-client-ip": "203.0.113.42" })),
       );
     }
 
@@ -102,6 +115,7 @@ describe("POST /api/orders", () => {
         throw new Error("SUPABASE_SECRET_KEY leaked provider diagnostic");
       },
       attempt: () => true,
+      clientIpHeader: "x-test-client-ip",
     });
 
     const response = await handler(jsonRequest(checkout));
@@ -115,6 +129,7 @@ describe("POST /api/orders", () => {
     const handler = createPostHandler({
       submitOrder: async () => ({ orderNumber: "PG-ABC234" }),
       attempt: () => true,
+      clientIpHeader: "x-test-client-ip",
     });
 
     const response = await handler(jsonRequest(checkout));
@@ -123,9 +138,81 @@ describe("POST /api/orders", () => {
     expect(response.headers.get("cache-control")).toBe("no-store");
     await expect(response.json()).resolves.toEqual({ orderNumber: "PG-ABC234" });
   });
+
+  it("ignores caller-controlled forwarding headers when the trusted header is absent", async () => {
+    const { createPostHandler } = await import("./route");
+    const { createMemoryRateLimiter } = await import("../../../lib/orders/rate-limit");
+    const limiter = createMemoryRateLimiter({ now: () => 1_000 });
+    const handler = createPostHandler({
+      submitOrder: async () => ({ orderNumber: "PG-ABC234" }),
+      attempt: (key) => limiter.attempt(key),
+      clientIpHeader: "x-vercel-forwarded-for",
+    });
+
+    const responses = [];
+    for (let attempt = 0; attempt < 6; attempt += 1) {
+      responses.push(
+        await handler(
+          jsonRequest(checkout, {
+            "x-forwarded-for": `203.0.113.${attempt + 1}`,
+            "x-real-ip": `198.51.100.${attempt + 1}`,
+          }),
+        ),
+      );
+    }
+
+    expect(responses.map((response) => response.status)).toEqual([201, 201, 201, 201, 201, 429]);
+  });
+
+  it("uses a configured header only when it contains one valid IP token", async () => {
+    const { createPostHandler } = await import("./route");
+    const attemptedKeys: string[] = [];
+    const handler = createPostHandler({
+      submitOrder: async () => ({ orderNumber: "PG-ABC234" }),
+      attempt: (key) => {
+        attemptedKeys.push(key);
+        return true;
+      },
+      clientIpHeader: "x-vercel-forwarded-for",
+    });
+
+    await handler(
+      jsonRequest(checkout, {
+        "x-vercel-forwarded-for": "203.0.113.42",
+        "x-forwarded-for": "198.51.100.1",
+      }),
+    );
+    await handler(
+      jsonRequest(checkout, {
+        "x-vercel-forwarded-for": "203.0.113.42",
+        "x-forwarded-for": "198.51.100.2",
+      }),
+    );
+    await handler(jsonRequest(checkout, { "x-vercel-forwarded-for": "203.0.113.42, 198.51.100.1" }));
+    await handler(jsonRequest(checkout, { "x-vercel-forwarded-for": "not-an-ip" }));
+
+    expect(attemptedKeys[0]).toBe(attemptedKeys[1]);
+    expect(attemptedKeys[0]).not.toBe(attemptedKeys[2]);
+    expect(attemptedKeys[2]).toBe(attemptedKeys[3]);
+  });
 });
 
 describe("order attempt rate limiter", () => {
+  it("blocks attempts that remain inside the sliding window after its original boundary", async () => {
+    const { createMemoryRateLimiter } = await import("../../../lib/orders/rate-limit");
+    let currentTime = 0;
+    const limiter = createMemoryRateLimiter({ limit: 5, windowMs: 10_000, now: () => currentTime });
+
+    expect(limiter.attempt("client-a")).toBe(true);
+    currentTime = 9_999;
+    for (let attempt = 0; attempt < 4; attempt += 1) {
+      expect(limiter.attempt("client-a")).toBe(true);
+    }
+    currentTime = 10_000;
+    expect(limiter.attempt("client-a")).toBe(true);
+    expect(limiter.attempt("client-a")).toBe(false);
+  });
+
   it("fails closed for unseen client keys when its bounded map is full", async () => {
     const { createMemoryRateLimiter } = await import("../../../lib/orders/rate-limit");
     const limiter = createMemoryRateLimiter({ maxEntries: 2, now: () => 1_000 });

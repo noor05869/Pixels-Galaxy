@@ -2,48 +2,81 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("server-only", () => ({}));
 
-const serverEnvironment = {
-  NEXT_PUBLIC_SITE_URL: "https://store.example.pk",
-  SUPABASE_URL: "https://project-ref.supabase.co",
-  SUPABASE_SECRET_KEY: "sb_secret_test",
-  RESEND_API_KEY: "re_test",
-  ORDER_NOTIFICATION_EMAIL: "orders@example.pk",
-  ORDER_FROM_EMAIL: "Pixels Galaxy Orders <orders@example.pk>",
-  ADMIN_PASSWORD_HASH: "scrypt$salt$hash",
-  ADMIN_SESSION_SECRET: "a-secure-session-secret-with-32-bytes",
-};
+const serverEnvironmentKeys = [
+  "NEXT_PUBLIC_SITE_URL",
+  "SUPABASE_URL",
+  "SUPABASE_SECRET_KEY",
+  "RESEND_API_KEY",
+  "ORDER_NOTIFICATION_EMAIL",
+  "ORDER_FROM_EMAIL",
+  "ADMIN_PASSWORD_HASH",
+  "ADMIN_SESSION_SECRET",
+  "ORDER_CLIENT_IP_HEADER",
+] as const;
+
+function clearServerEnvironment(): void {
+  for (const key of serverEnvironmentKeys) vi.stubEnv(key, "");
+}
 
 afterEach(() => {
   vi.unstubAllEnvs();
   vi.resetModules();
 });
 
-describe("getServerConfig", () => {
-  it("waits to reject incomplete provider configuration until it is called", async () => {
-    vi.stubEnv("SUPABASE_URL", "");
+describe("server configuration by responsibility", () => {
+  it("loads Supabase settings without requiring notification or admin settings", async () => {
+    clearServerEnvironment();
+    vi.stubEnv("SUPABASE_URL", "https://project-ref.supabase.co");
+    vi.stubEnv("SUPABASE_SECRET_KEY", "sb_secret_test");
+    const { getSupabaseConfig } = await import("./server");
 
-    const { getServerConfig } = await import("./server");
-
-    expect(() => getServerConfig()).toThrow("Server configuration is incomplete");
-  });
-
-  it("returns the configured server values", async () => {
-    for (const [key, value] of Object.entries(serverEnvironment)) {
-      vi.stubEnv(key, value);
-    }
-
-    const { getServerConfig } = await import("./server");
-
-    expect(getServerConfig()).toEqual({
-      siteUrl: "https://store.example.pk",
+    expect(getSupabaseConfig()).toEqual({
       supabaseUrl: "https://project-ref.supabase.co",
       supabaseSecretKey: "sb_secret_test",
+    });
+  });
+
+  it("loads notification settings without requiring Supabase or admin settings", async () => {
+    clearServerEnvironment();
+    vi.stubEnv("NEXT_PUBLIC_SITE_URL", "https://store.example.pk");
+    vi.stubEnv("RESEND_API_KEY", "re_test");
+    vi.stubEnv("ORDER_NOTIFICATION_EMAIL", "orders@example.pk");
+    vi.stubEnv("ORDER_FROM_EMAIL", "Pixels Galaxy Orders <orders@example.pk>");
+    const { getNotificationConfig } = await import("./server");
+
+    expect(getNotificationConfig()).toEqual({
+      siteUrl: "https://store.example.pk",
       resendApiKey: "re_test",
       notificationEmail: "orders@example.pk",
       fromEmail: "Pixels Galaxy Orders <orders@example.pk>",
+    });
+  });
+
+  it("loads admin settings without requiring provider settings", async () => {
+    clearServerEnvironment();
+    vi.stubEnv("ADMIN_PASSWORD_HASH", "scrypt$salt$hash");
+    vi.stubEnv("ADMIN_SESSION_SECRET", "a-secure-session-secret-with-32-bytes");
+    const { getAdminConfig } = await import("./server");
+
+    expect(getAdminConfig()).toEqual({
       adminPasswordHash: "scrypt$salt$hash",
       adminSessionSecret: "a-secure-session-secret-with-32-bytes",
     });
+  });
+
+  it("normalizes the configured trusted client IP header", async () => {
+    clearServerEnvironment();
+    vi.stubEnv("ORDER_CLIENT_IP_HEADER", "X-Vercel-Forwarded-For");
+    const { getOrderApiConfig } = await import("./server");
+
+    expect(getOrderApiConfig()).toEqual({ clientIpHeader: "x-vercel-forwarded-for" });
+  });
+
+  it("returns one generic error for an incomplete responsibility", async () => {
+    clearServerEnvironment();
+    const { getSupabaseConfig } = await import("./server");
+
+    expect(() => getSupabaseConfig()).toThrow("Server configuration is incomplete");
   });
 });
 

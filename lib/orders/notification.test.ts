@@ -52,23 +52,22 @@ const order: StoredOrder = {
       lineTotal: 149_900,
     },
   ],
-  notificationState: "pending",
+  notificationState: "failed",
   createdAt: "2026-08-25T09:00:00.000Z",
   updatedAt: "2026-08-25T09:00:00.000Z",
 };
 
 const serverEnvironment = {
   NEXT_PUBLIC_SITE_URL: "https://store.example.pk/",
-  SUPABASE_URL: "https://project-ref.supabase.co",
-  SUPABASE_SECRET_KEY: "sb_secret_test",
   RESEND_API_KEY: "re_test",
   ORDER_NOTIFICATION_EMAIL: "orders@example.pk",
   ORDER_FROM_EMAIL: "Pixels Galaxy Orders <orders@example.pk>",
-  ADMIN_PASSWORD_HASH: "scrypt$salt$hash",
-  ADMIN_SESSION_SECRET: "a-secure-session-secret-with-32-bytes",
 };
 
 beforeEach(() => {
+  for (const key of ["SUPABASE_URL", "SUPABASE_SECRET_KEY", "ADMIN_PASSWORD_HASH", "ADMIN_SESSION_SECRET"]) {
+    vi.stubEnv(key, "");
+  }
   for (const [key, value] of Object.entries(serverEnvironment)) {
     vi.stubEnv(key, value);
   }

@@ -2,7 +2,7 @@ import "server-only";
 
 import { Resend } from "resend";
 
-import { getServerConfig } from "../config/server";
+import { getNotificationConfig } from "../config/server";
 
 import type { StoredOrder } from "./types";
 
@@ -102,7 +102,7 @@ function getResend(apiKey: string): Resend {
 
 export async function sendOrderNotification(order: StoredOrder): Promise<void> {
   try {
-    const config = getServerConfig();
+    const config = getNotificationConfig();
     const dashboardUrl = `${config.siteUrl.replace(/\/$/, "")}/admin/orders/${encodeURIComponent(order.orderNumber)}`;
     const result = await getResend(config.resendApiKey).emails.send({
       from: config.fromEmail,

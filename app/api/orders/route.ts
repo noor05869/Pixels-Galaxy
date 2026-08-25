@@ -1,5 +1,7 @@
 import { createHash } from "node:crypto";
+import { isIP } from "node:net";
 
+import { getOrderApiConfig } from "../../../lib/config/server";
 import { createMemoryRateLimiter } from "../../../lib/orders/rate-limit";
 import { InvalidOrderError, submitOrder } from "../../../lib/orders/service";
 import { parseCheckoutInput } from "../../../lib/orders/validation";
@@ -9,6 +11,7 @@ const MAX_BODY_BYTES = 32 * 1024;
 type PostHandlerDependencies = {
   submitOrder: (value: unknown) => Promise<{ orderNumber: string }>;
   attempt: (clientKey: string) => boolean;
+  clientIpHeader: string;
 };
 
 class PayloadTooLargeError extends Error {}
@@ -58,10 +61,12 @@ async function readBodyWithinLimit(request: Request): Promise<string> {
   return new TextDecoder().decode(body);
 }
 
-function clientKey(request: Request): string {
-  const forwardedAddress = request.headers.get("x-forwarded-for")?.split(",", 1)[0].trim();
-  const address = (forwardedAddress || request.headers.get("x-real-ip")?.trim() || "unknown").slice(0, 128);
-  return createHash("sha256").update(address).digest("hex");
+function clientKey(request: Request, trustedHeader: string): string {
+  const headerValue = request.headers.get(trustedHeader)?.trim();
+  const identity = headerValue && headerValue.length <= 45 && isIP(headerValue) !== 0
+    ? headerValue
+    : "order-client-fallback-v1";
+  return createHash("sha256").update(identity).digest("hex");
 }
 
 export function createPostHandler(dependencies: PostHandlerDependencies): (request: Request) => Promise<Response> {
@@ -87,7 +92,7 @@ export function createPostHandler(dependencies: PostHandlerDependencies): (reque
       return jsonResponse({ error: "Invalid order" }, 400);
     }
 
-    if (!dependencies.attempt(clientKey(request))) {
+    if (!dependencies.attempt(clientKey(request, dependencies.clientIpHeader))) {
       return jsonResponse({ error: "Too many order attempts" }, 429);
     }
 
@@ -106,11 +111,15 @@ export function createPostHandler(dependencies: PostHandlerDependencies): (reque
 // This bounded map protects one server instance. Distributed production enforcement
 // must also be configured at the hosting platform or edge firewall.
 const rateLimiter = createMemoryRateLimiter();
-const postHandler = createPostHandler({
-  submitOrder,
-  attempt: (key) => rateLimiter.attempt(key),
-});
-
 export async function POST(request: Request): Promise<Response> {
-  return postHandler(request);
+  try {
+    const config = getOrderApiConfig();
+    return await createPostHandler({
+      submitOrder,
+      attempt: (key) => rateLimiter.attempt(key),
+      clientIpHeader: config.clientIpHeader,
+    })(request);
+  } catch {
+    return jsonResponse({ error: "Order service unavailable" }, 503);
+  }
 }

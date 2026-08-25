@@ -2,7 +2,7 @@ import "server-only";
 
 import { createClient } from "@supabase/supabase-js";
 
-import { getServerConfig } from "../config/server";
+import { getSupabaseConfig } from "../config/server";
 
 import type { NewOrder, NotificationState, OrderStatus, StoredOrder, TrustedOrderItem } from "./types";
 
@@ -152,7 +152,7 @@ export function createOrdersRepository(dataSource: OrdersDataSource): OrdersRepo
 }
 
 function createSupabaseDataSource(): OrdersDataSource {
-  const config = getServerConfig();
+  const config = getSupabaseConfig();
   const client = createClient(config.supabaseUrl, config.supabaseSecretKey, {
     auth: { autoRefreshToken: false, detectSessionInUrl: false, persistSession: false },
   });

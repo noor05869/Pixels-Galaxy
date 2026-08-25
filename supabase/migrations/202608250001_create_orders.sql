@@ -14,7 +14,7 @@ create table public.orders (
   total integer not null check (total >= 0),
   status text not null default 'new' check (status in ('new', 'confirmed', 'shipped', 'completed', 'cancelled')),
   items jsonb not null check (jsonb_typeof(items) = 'array'),
-  notification_state text not null default 'pending' check (notification_state in ('pending', 'sent', 'failed')),
+  notification_state text not null default 'failed' check (notification_state in ('sent', 'failed')),
   notification_failure text check (notification_failure is null or char_length(notification_failure) <= 300),
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()

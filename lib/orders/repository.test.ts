@@ -24,7 +24,7 @@ type DatabaseOrder = {
     unitPrice: number;
     lineTotal: number;
   }>;
-  notification_state: "pending" | "sent" | "failed";
+  notification_state: "sent" | "failed";
   notification_failure: string | null;
   created_at: string;
   updated_at: string;
@@ -51,7 +51,7 @@ const newOrder = {
       lineTotal: 899900,
     },
   ],
-  notificationState: "pending" as const,
+  notificationState: "failed" as const,
 };
 
 const databaseOrder: DatabaseOrder = {
@@ -129,7 +129,7 @@ describe("orders repository", () => {
       total: 899900,
       status: "new",
       items: newOrder.items,
-      notification_state: "pending",
+      notification_state: "failed",
       notification_failure: null,
     });
   });

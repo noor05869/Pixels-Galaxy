@@ -71,7 +71,7 @@ describe("createOrderService", () => {
       paymentMethod: "cod",
       currency: "PKR",
       status: "new",
-      notificationState: "pending",
+      notificationState: "failed",
       items: [
         expect.objectContaining({
           productId: "zipstring-original",
@@ -101,12 +101,16 @@ describe("createOrderService", () => {
     expect(notify).not.toHaveBeenCalled();
   });
 
-  it("marks notification failed with no provider detail but returns the saved order number", async () => {
+  it("keeps the pessimistic failed state when notification fails", async () => {
     const stateUpdates: Array<{ state: string; failure?: string }> = [];
+    let persistedOrder: NewOrder | undefined;
     const { createOrderService } = await import("./service");
     const service = createOrderService({
       repository: {
-        createOrder: async (order) => storedOrder(order),
+        createOrder: async (order) => {
+          persistedOrder = order;
+          return storedOrder(order);
+        },
         setNotificationState: async (_id, state, failure) => {
           stateUpdates.push({ state, failure });
         },
@@ -118,7 +122,35 @@ describe("createOrderService", () => {
     });
 
     await expect(service(checkout)).resolves.toEqual({ orderNumber: "PG-ABC234" });
-    expect(stateUpdates).toEqual([{ state: "failed", failure: "Order notification failed" }]);
+    expect(persistedOrder?.notificationState).toBe("failed");
+    expect(stateUpdates).toEqual([]);
+  });
+
+  it("remains durably failed when promotion after a successful email cannot be stored", async () => {
+    let durableState: "sent" | "failed" = "sent";
+    const setNotificationState = vi.fn(async (_id: string, state: "sent" | "failed") => {
+      if (state === "sent") throw new Error("Order storage failed");
+      durableState = state;
+    });
+    const { createOrderService } = await import("./service");
+    const service = createOrderService({
+      repository: {
+        createOrder: async (order) => {
+          durableState = order.notificationState;
+          return storedOrder(order);
+        },
+        setNotificationState,
+      },
+      notify: async () => undefined,
+      createOrderNumber: () => "PG-ABC234",
+    });
+
+    await expect(service(checkout)).resolves.toEqual({ orderNumber: "PG-ABC234" });
+    expect(setNotificationState).toHaveBeenCalledWith(
+      "9a6ac6b3-864c-4cd0-afdb-e1ee26f46d2f",
+      "sent",
+    );
+    expect(durableState).toBe("failed");
   });
 
   it("retries a unique order-number collision with a fresh bounded identifier", async () => {

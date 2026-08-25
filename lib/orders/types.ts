@@ -29,7 +29,7 @@ export type TrustedOrderItem = {
   lineTotal: number;
 };
 
-export type NotificationState = "pending" | "sent" | "failed";
+export type NotificationState = "sent" | "failed";
 
 export type NewOrder = {
   orderNumber: string;
@@ -44,7 +44,7 @@ export type NewOrder = {
   total: number;
   status: "new";
   items: TrustedOrderItem[];
-  notificationState: "pending";
+  notificationState: "failed";
 };
 
 export type StoredOrder = Omit<NewOrder, "status" | "notificationState"> & {

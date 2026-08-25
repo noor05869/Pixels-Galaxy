@@ -1,8 +1,7 @@
 import "server-only";
 
 type AttemptWindow = {
-  count: number;
-  resetAt: number;
+  timestamps: number[];
 };
 
 type RateLimiterOptions = {
@@ -22,8 +21,10 @@ export function createMemoryRateLimiter(options: RateLimiterOptions = {}): {
   const attempts = new Map<string, AttemptWindow>();
 
   function pruneExpired(currentTime: number): void {
+    const cutoff = currentTime - windowMs;
     for (const [key, window] of attempts) {
-      if (window.resetAt <= currentTime) attempts.delete(key);
+      window.timestamps = window.timestamps.filter((timestamp) => timestamp > cutoff);
+      if (window.timestamps.length === 0) attempts.delete(key);
     }
   }
 
@@ -34,14 +35,14 @@ export function createMemoryRateLimiter(options: RateLimiterOptions = {}): {
 
       const existing = attempts.get(key);
       if (existing) {
-        if (existing.count >= limit) return false;
-        existing.count += 1;
+        if (existing.timestamps.length >= limit) return false;
+        existing.timestamps.push(currentTime);
         return true;
       }
 
       // Fail closed for unseen clients when the bounded map is saturated.
       if (attempts.size >= maxEntries) return false;
-      attempts.set(key, { count: 1, resetAt: currentTime + windowMs });
+      attempts.set(key, { timestamps: [currentTime] });
       return true;
     },
   };
