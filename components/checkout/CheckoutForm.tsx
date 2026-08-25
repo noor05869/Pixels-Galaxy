@@ -6,20 +6,11 @@ import type { FormEvent, InvalidEvent } from "react";
 
 import { useCart } from "@/components/cart/CartProvider";
 import { toCheckoutPayload } from "@/lib/orders/checkout-payload";
+import { validateCheckoutFields } from "@/lib/orders/checkout-validation";
+import type { CheckoutErrors, CheckoutFieldName, CheckoutFormValues } from "@/lib/orders/checkout-validation";
 import { OrderSummary } from "./OrderSummary";
 
-type CheckoutFields = {
-  customerName: string;
-  phone: string;
-  email: string;
-  city: string;
-  address: string;
-  notes: string;
-  consent: boolean;
-  website: string;
-};
-
-const initialFields: CheckoutFields = {
+const initialFields: CheckoutFormValues = {
   customerName: "",
   phone: "",
   email: "",
@@ -30,37 +21,77 @@ const initialFields: CheckoutFields = {
   website: "",
 };
 
+const fieldDetails: Record<CheckoutFieldName, { id: string; label: string }> = {
+  customerName: { id: "customer-name", label: "Full name" },
+  phone: { id: "phone", label: "Pakistani phone number" },
+  email: { id: "email", label: "Email" },
+  city: { id: "city", label: "City" },
+  address: { id: "address", label: "Delivery address" },
+  notes: { id: "notes", label: "Order notes" },
+  consent: { id: "consent", label: "Consent" },
+};
+
+const fieldOrder = Object.keys(fieldDetails) as CheckoutFieldName[];
+
 export function CheckoutForm() {
-  const { lines, clearCart } = useCart();
+  const { lines, isHydrated, clearCart } = useCart();
   const [fields, setFields] = useState(initialFields);
   const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState("");
+  const [fieldErrors, setFieldErrors] = useState<CheckoutErrors>({});
+  const [submissionError, setSubmissionError] = useState("");
+  const [errorFocusVersion, setErrorFocusVersion] = useState(0);
   const [orderNumber, setOrderNumber] = useState("");
   const errorRef = useRef<HTMLDivElement>(null);
+  const successRef = useRef<HTMLElement>(null);
   const submittingRef = useRef(false);
   const clearedRef = useRef(false);
 
   useEffect(() => {
-    if (error) errorRef.current?.focus();
-  }, [error]);
+    if (orderNumber) successRef.current?.focus();
+  }, [orderNumber]);
 
-  const updateField = (field: keyof CheckoutFields, value: string | boolean) => {
+  useEffect(() => {
+    if (errorFocusVersion > 0) errorRef.current?.focus();
+  }, [errorFocusVersion]);
+
+  const showValidationErrors = (errors: CheckoutErrors) => {
+    setFieldErrors(errors);
+    setSubmissionError("");
+    setErrorFocusVersion((current) => current + 1);
+  };
+
+  const updateField = (field: keyof CheckoutFormValues, value: string | boolean) => {
     setFields((current) => ({ ...current, [field]: value }));
+    setSubmissionError("");
+    if (field !== "website" && fieldErrors[field]) {
+      setFieldErrors((current) => {
+        const next = { ...current };
+        delete next[field];
+        return next;
+      });
+    }
   };
 
   const handleInvalid = (event: InvalidEvent<HTMLFormElement>) => {
     event.preventDefault();
-    setError("Please review the highlighted field and try again.");
-    requestAnimationFrame(() => errorRef.current?.focus());
+    const errors = validateCheckoutFields(fields);
+    if (Object.keys(errors).length > 0) showValidationErrors(errors);
   };
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (submittingRef.current) return;
 
+    const errors = validateCheckoutFields(fields);
+    if (Object.keys(errors).length > 0) {
+      showValidationErrors(errors);
+      return;
+    }
+
     submittingRef.current = true;
     setSubmitting(true);
-    setError("");
+    setFieldErrors({});
+    setSubmissionError("");
 
     try {
       const response = await fetch("/api/orders", {
@@ -90,7 +121,8 @@ export function CheckoutForm() {
         const message = result && typeof result === "object" && "error" in result && typeof result.error === "string"
           ? result.error
           : "We could not place your order. Please try again.";
-        setError(message);
+        setSubmissionError(message);
+        setErrorFocusVersion((current) => current + 1);
         return;
       }
 
@@ -100,21 +132,35 @@ export function CheckoutForm() {
         clearCart();
       }
     } catch {
-      setError("We could not reach the order service. Check your connection and try again.");
+      setSubmissionError("We could not reach the order service. Check your connection and try again.");
+      setErrorFocusVersion((current) => current + 1);
     } finally {
       submittingRef.current = false;
       setSubmitting(false);
     }
   };
 
+  const validationErrors = fieldOrder.filter((field) => fieldErrors[field]);
+  const hasErrors = validationErrors.length > 0 || Boolean(submissionError);
+
   if (orderNumber) {
     return (
-      <section className="checkout-state checkout-success" aria-labelledby="checkout-success-title">
+      <section className="checkout-state checkout-success" aria-labelledby="checkout-success-title" aria-live="polite" role="status" tabIndex={-1} ref={successRef}>
         <p className="checkout-kicker">THANK YOU</p>
         <h1 id="checkout-success-title">Order {orderNumber} confirmed</h1>
         <p>Your Cash on Delivery order is in. Pay the courier when your parcel arrives.</p>
         <p>Questions? Email <a href="mailto:hello@pixelsgalaxy.com">hello@pixelsgalaxy.com</a>.</p>
         <Link href="/#shop" className="checkout-primary-action">Return to store</Link>
+      </section>
+    );
+  }
+
+  if (!isHydrated) {
+    return (
+      <section className="checkout-state checkout-loading" aria-live="polite" aria-busy="true">
+        <p className="checkout-kicker">YOUR ORDER</p>
+        <h1>Loading your cart…</h1>
+        <p>Checking your saved items.</p>
       </section>
     );
   }
@@ -147,42 +193,64 @@ export function CheckoutForm() {
             </div>
           </div>
 
-          {error ? (
-            <div className="checkout-error" id="checkout-error" role="alert" tabIndex={-1} ref={errorRef}>
-              <strong>There is a problem</strong>
-              <span>{error}</span>
+          {hasErrors ? (
+            <div className="checkout-error" id="checkout-error" role="alert" aria-labelledby="checkout-error-title" tabIndex={-1} ref={errorRef}>
+              <strong id="checkout-error-title">
+                {validationErrors.length > 1 ? `There are ${validationErrors.length} problems` : "There is a problem"}
+              </strong>
+              {submissionError ? <span>{submissionError}</span> : null}
+              {validationErrors.length > 0 ? (
+                <ul>
+                  {validationErrors.map((field) => (
+                    <li key={field}>
+                      <a href={`#${fieldDetails[field].id}`} onClick={(event) => {
+                        event.preventDefault();
+                        document.getElementById(fieldDetails[field].id)?.focus();
+                      }}>
+                        {fieldDetails[field].label}: {fieldErrors[field]}
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              ) : null}
             </div>
           ) : null}
 
           <div className="checkout-field checkout-field-wide">
             <label htmlFor="customer-name">Full name *</label>
-            <input id="customer-name" name="customerName" autoComplete="name" required maxLength={100} value={fields.customerName} onChange={(event) => updateField("customerName", event.target.value)} />
+            <input id="customer-name" name="customerName" autoComplete="name" required maxLength={100} aria-invalid={fieldErrors.customerName ? true : undefined} aria-describedby={fieldErrors.customerName ? "customer-name-error" : undefined} value={fields.customerName} onChange={(event) => updateField("customerName", event.target.value)} />
+            {fieldErrors.customerName ? <span className="checkout-field-error" id="customer-name-error">{fieldErrors.customerName}</span> : null}
           </div>
 
           <div className="checkout-field">
             <label htmlFor="phone">Pakistani phone number *</label>
-            <input id="phone" name="phone" type="tel" inputMode="tel" autoComplete="tel" required pattern="(?:03[0-9]{9}|[+]923[0-9]{9})" title="Use 03XXXXXXXXX or +923XXXXXXXXX" placeholder="03XXXXXXXXX" value={fields.phone} onChange={(event) => updateField("phone", event.target.value)} />
-            <small>Use 03XXXXXXXXX or +923XXXXXXXXX.</small>
+            <input id="phone" name="phone" type="tel" inputMode="tel" autoComplete="tel" required pattern="(?:03[0-9]{9}|[+]923[0-9]{9})" title="Use 03XXXXXXXXX or +923XXXXXXXXX" placeholder="03XXXXXXXXX" aria-invalid={fieldErrors.phone ? true : undefined} aria-describedby={fieldErrors.phone ? "phone-hint phone-error" : "phone-hint"} value={fields.phone} onChange={(event) => updateField("phone", event.target.value)} />
+            <small id="phone-hint">Use 03XXXXXXXXX or +923XXXXXXXXX.</small>
+            {fieldErrors.phone ? <span className="checkout-field-error" id="phone-error">{fieldErrors.phone}</span> : null}
           </div>
 
           <div className="checkout-field">
             <label htmlFor="email">Email <span>(optional)</span></label>
-            <input id="email" name="email" type="email" inputMode="email" autoComplete="email" maxLength={254} value={fields.email} onChange={(event) => updateField("email", event.target.value)} />
+            <input id="email" name="email" type="email" inputMode="email" autoComplete="email" maxLength={254} aria-invalid={fieldErrors.email ? true : undefined} aria-describedby={fieldErrors.email ? "email-error" : undefined} value={fields.email} onChange={(event) => updateField("email", event.target.value)} />
+            {fieldErrors.email ? <span className="checkout-field-error" id="email-error">{fieldErrors.email}</span> : null}
           </div>
 
           <div className="checkout-field checkout-field-wide">
             <label htmlFor="city">City *</label>
-            <input id="city" name="city" autoComplete="address-level2" required maxLength={100} value={fields.city} onChange={(event) => updateField("city", event.target.value)} />
+            <input id="city" name="city" autoComplete="address-level2" required maxLength={100} aria-invalid={fieldErrors.city ? true : undefined} aria-describedby={fieldErrors.city ? "city-error" : undefined} value={fields.city} onChange={(event) => updateField("city", event.target.value)} />
+            {fieldErrors.city ? <span className="checkout-field-error" id="city-error">{fieldErrors.city}</span> : null}
           </div>
 
           <div className="checkout-field checkout-field-wide">
             <label htmlFor="address">Delivery address *</label>
-            <textarea id="address" name="address" autoComplete="street-address" required maxLength={500} rows={4} value={fields.address} onChange={(event) => updateField("address", event.target.value)} />
+            <textarea id="address" name="address" autoComplete="street-address" required maxLength={500} rows={4} aria-invalid={fieldErrors.address ? true : undefined} aria-describedby={fieldErrors.address ? "address-error" : undefined} value={fields.address} onChange={(event) => updateField("address", event.target.value)} />
+            {fieldErrors.address ? <span className="checkout-field-error" id="address-error">{fieldErrors.address}</span> : null}
           </div>
 
           <div className="checkout-field checkout-field-wide">
             <label htmlFor="notes">Order notes <span>(optional)</span></label>
-            <textarea id="notes" name="notes" maxLength={1000} rows={3} placeholder="Delivery instructions or anything else we should know" value={fields.notes} onChange={(event) => updateField("notes", event.target.value)} />
+            <textarea id="notes" name="notes" maxLength={1000} rows={3} placeholder="Delivery instructions or anything else we should know" aria-invalid={fieldErrors.notes ? true : undefined} aria-describedby={fieldErrors.notes ? "notes-error" : undefined} value={fields.notes} onChange={(event) => updateField("notes", event.target.value)} />
+            {fieldErrors.notes ? <span className="checkout-field-error" id="notes-error">{fieldErrors.notes}</span> : null}
           </div>
 
           <div className="checkout-honeypot" aria-hidden="true">
@@ -190,10 +258,13 @@ export function CheckoutForm() {
             <input id="website" name="website" tabIndex={-1} autoComplete="off" maxLength={0} value={fields.website} onChange={(event) => updateField("website", event.target.value)} />
           </div>
 
-          <label className="checkout-consent">
-            <input type="checkbox" name="consent" required checked={fields.consent} onChange={(event) => updateField("consent", event.target.checked)} />
-            <span>I confirm these delivery details are correct and agree to be contacted about this order. *</span>
-          </label>
+          <div className="checkout-consent-wrap">
+            <label className="checkout-consent" htmlFor="consent">
+              <input id="consent" type="checkbox" name="consent" required aria-invalid={fieldErrors.consent ? true : undefined} aria-describedby={fieldErrors.consent ? "consent-error" : undefined} checked={fields.consent} onChange={(event) => updateField("consent", event.target.checked)} />
+              <span>I confirm these delivery details are correct and agree to be contacted about this order. *</span>
+            </label>
+            {fieldErrors.consent ? <span className="checkout-field-error" id="consent-error">{fieldErrors.consent}</span> : null}
+          </div>
 
           <button className="checkout-submit" type="submit" disabled={submitting}>
             {submitting ? "PLACING ORDER…" : "PLACE CASH ON DELIVERY ORDER"}
