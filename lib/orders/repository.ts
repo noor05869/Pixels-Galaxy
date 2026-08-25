@@ -52,6 +52,28 @@ export type OrdersRepository = {
   ): Promise<void>;
 };
 
+export class OrderNumberCollisionError extends Error {
+  constructor() {
+    super("Order number collision");
+    this.name = "OrderNumberCollisionError";
+  }
+}
+
+export function toOrderStorageError(error: unknown): Error {
+  if (typeof error === "object" && error !== null) {
+    const candidate = error as { code?: unknown; details?: unknown; message?: unknown };
+    const providerText = `${typeof candidate.details === "string" ? candidate.details : ""} ${
+      typeof candidate.message === "string" ? candidate.message : ""
+    }`;
+
+    if (candidate.code === "23505" && providerText.includes("order_number")) {
+      return new OrderNumberCollisionError();
+    }
+  }
+
+  return new Error("Order storage failed");
+}
+
 function toOrderRow(order: NewOrder): NewOrderRow {
   return {
     order_number: order.orderNumber,
@@ -138,7 +160,8 @@ function createSupabaseDataSource(): OrdersDataSource {
   return {
     async insert(row) {
       const { data, error } = await client.from("orders").insert(row).select().single();
-      if (error || !data) throw new Error("Order storage failed");
+      if (error) throw toOrderStorageError(error);
+      if (!data) throw new Error("Order storage failed");
 
       return data as OrderRow;
     },

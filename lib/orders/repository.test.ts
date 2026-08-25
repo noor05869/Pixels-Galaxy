@@ -79,6 +79,20 @@ async function loadRepository() {
 }
 
 describe("orders repository", () => {
+  it("identifies only order-number unique violations as retryable collisions", async () => {
+    const { OrderNumberCollisionError, toOrderStorageError } = await loadRepository();
+
+    expect(
+      toOrderStorageError({
+        code: "23505",
+        details: "Key (order_number)=(PG-ABC234) already exists.",
+      }),
+    ).toBeInstanceOf(OrderNumberCollisionError);
+    expect(
+      toOrderStorageError({ code: "23505", details: "Key (another_column)=(value) already exists." }),
+    ).toEqual(new Error("Order storage failed"));
+  });
+
   it("maps a created database row back to application order fields", async () => {
     const repositoryModule = await loadRepository();
     expect(repositoryModule).not.toBeNull();
