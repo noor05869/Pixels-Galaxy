@@ -209,3 +209,17 @@
   .admin-detail-list,.admin-order-cards dl{grid-template-columns:1fr}
   .admin-line-items dl{grid-template-columns:1fr}
 }
+
+/* WhatsApp ordering */
+.whatsapp-buy{min-height:48px;display:inline-flex;align-items:center;justify-content:center;gap:9px;border:2px solid transparent;border-radius:999px;background:#25d366;color:#052b20;font-size:12px;font-weight:1000;line-height:1.2;text-align:center;transition:background .18s ease,transform .18s ease}
+.whatsapp-buy:hover{background:#68e596;transform:translateY(-2px)}
+.whatsapp-buy svg{width:18px;height:18px;flex:0 0 auto}
+.whatsapp-buy-featured{grid-column:1/-1;width:100%;padding:14px 20px}
+.whatsapp-buy-card{width:100%;margin-top:18px;padding:11px 14px}
+.product-card .whatsapp-buy:focus-visible{outline-color:var(--navy);box-shadow:0 0 0 3px #fff}
+
+@media(max-width:560px){
+  .whatsapp-buy{min-height:52px}
+  .whatsapp-buy-featured{grid-column:auto}
+  .whatsapp-buy-card{margin-top:16px}
+}
