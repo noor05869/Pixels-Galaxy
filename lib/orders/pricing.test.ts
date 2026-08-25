@@ -20,6 +20,16 @@ describe("priceOrder", () => {
     });
   });
 
+  it.each([
+    { bundleId: "two", quantity: 1 },
+    { bundleId: "two", quantity: 3 },
+    { bundleId: "four", quantity: 2 },
+    { bundleId: "four", quantity: 5 },
+  ])("rejects quantity $quantity that is incompatible with bundle $bundleId", ({ bundleId, quantity }) => {
+    expect(() => priceOrder([{ productId: "zipstring-original", bundleId, quantity }]))
+      .toThrow("Cart item is unavailable");
+  });
+
   it("uses the base price only with the card bundle for products without bundles", () => {
     expect(priceOrder([{ productId: "zipstring-glow", bundleId: "card", quantity: 2 }]).total).toBe(1399800);
   });

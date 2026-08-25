@@ -12,7 +12,7 @@ export type CheckoutFormValues = {
 export type CheckoutFieldName = Exclude<keyof CheckoutFormValues, "website">;
 export type CheckoutErrors = Partial<Record<CheckoutFieldName, string>>;
 
-const pakistanPhone = /^(?:03\d{9}|\+923\d{9})$/;
+const pakistanPhone = /^(?:03\d{9}|\+923\d{9}|00923\d{9})$/;
 const emailAddress = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export function validateCheckoutFields(fields: CheckoutFormValues): CheckoutErrors {
@@ -28,7 +28,7 @@ export function validateCheckoutFields(fields: CheckoutFormValues): CheckoutErro
   else if (customerName.length > 100) errors.customerName = "Full name must be 100 characters or fewer.";
 
   if (!phone) errors.phone = "Enter a Pakistani phone number.";
-  else if (!pakistanPhone.test(phone)) errors.phone = "Use 03XXXXXXXXX or +923XXXXXXXXX.";
+  else if (!pakistanPhone.test(phone)) errors.phone = "Use 03XXXXXXXXX, +923XXXXXXXXX, or 00923XXXXXXXXX.";
 
   if (email.length > 254) errors.email = "Email must be 254 characters or fewer.";
   else if (email && !emailAddress.test(email)) errors.email = "Enter a valid email address or leave this field blank.";

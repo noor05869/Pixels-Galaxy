@@ -37,7 +37,8 @@ npm start
 - `/admin/login` — administrator sign-in; `noindex, nofollow`
 - `/admin/orders` and `/admin/orders/<order-number>` — protected order dashboard; `noindex, nofollow`
 - `/api/orders` — order submission API
-- `/api/admin/*` — protected administrator APIs
+- `/api/admin/login` — public sign-in endpoint with shared brute-force protection
+- `/api/admin/logout` and `/api/admin/orders/*` — protected administrator APIs
 
 Only the public storefront belongs in the sitemap. Checkout, admin, order-detail, and API URLs are intentionally excluded.
 

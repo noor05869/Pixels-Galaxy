@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
 
 import type { CartLine } from "@/lib/cart/types";
-import { toCheckoutPayload } from "./checkout-payload";
+import { createCheckoutPayload } from "./checkout-payload";
+import { CATALOGUE_REVISION } from "./pricing";
 
 describe("toCheckoutPayload", () => {
   it("keeps only identifiers and quantity from each cart line", () => {
@@ -14,12 +15,14 @@ describe("toCheckoutPayload", () => {
       unitPrice: 1299900,
     };
 
-    expect(toCheckoutPayload([line])).toEqual([
-      {
+    expect(createCheckoutPayload([line])).toEqual({
+      items: [{
         productId: line.productId,
         bundleId: line.bundleId,
         quantity: line.quantity,
-      },
-    ]);
+      }],
+      expectedTotal: 2599800,
+      catalogueRevision: CATALOGUE_REVISION,
+    });
   });
 });

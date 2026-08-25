@@ -23,7 +23,7 @@ async function memoryLimiter() {
 }
 
 describe("POST /api/admin/login", () => {
-  it("returns a generic 400 for malformed request bodies without reserving capacity", async () => {
+  it("returns a generic 400 for malformed request bodies and counts the attempt", async () => {
     const { createLoginHandler } = await import("./route");
     const { limiter, state } = await memoryLimiter();
     const handler = createLoginHandler({
@@ -40,7 +40,37 @@ describe("POST /api/admin/login", () => {
     expect(response.headers.get("cache-control")).toBe("no-store");
     await expect(response.json()).resolves.toEqual({ error: "Invalid sign-in request" });
     expect(response.headers.get("set-cookie")).toBeNull();
-    expect(state.attempts.size).toBe(0);
+    expect(state.attempts.size).toBe(1);
+  });
+
+  it("rejects a declared oversized body before authentication and counts the attempt", async () => {
+    const { createLoginHandler } = await import("./route");
+    const { limiter, state } = await memoryLimiter();
+    const authenticate = vi.fn(async () => true);
+    const handler = createLoginHandler({ authenticate, createSession: async () => "session", clientKey: () => "a".repeat(64), rateLimiter: limiter, secureCookie: true });
+    const request = new Request("https://store.example.pk/api/admin/login", { method: "POST", headers: { "content-type": "application/json", "content-length": "5000" }, body: JSON.stringify({ password: "short" }) });
+
+    const response = await handler(request);
+
+    expect(response.status).toBe(400);
+    await expect(response.json()).resolves.toEqual({ error: "Invalid sign-in request" });
+    expect(authenticate).not.toHaveBeenCalled();
+    expect(state.attempts.size).toBe(1);
+  });
+
+  it("rejects a streamed oversized body before authentication and counts the attempt", async () => {
+    const { createLoginHandler } = await import("./route");
+    const { limiter, state } = await memoryLimiter();
+    const authenticate = vi.fn(async () => true);
+    const handler = createLoginHandler({ authenticate, createSession: async () => "session", clientKey: () => "a".repeat(64), rateLimiter: limiter, secureCookie: true });
+    const request = new Request("https://store.example.pk/api/admin/login", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ password: "x".repeat(5000) }) });
+
+    const response = await handler(request);
+
+    expect(response.status).toBe(400);
+    await expect(response.json()).resolves.toEqual({ error: "Invalid sign-in request" });
+    expect(authenticate).not.toHaveBeenCalled();
+    expect(state.attempts.size).toBe(1);
   });
 
   it("does not publicly distinguish a wrong password from missing configuration", async () => {

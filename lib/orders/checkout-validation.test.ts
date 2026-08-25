@@ -34,7 +34,7 @@ describe("validateCheckoutFields", () => {
       email: "not-an-email",
       consent: false,
     })).toEqual({
-      phone: "Use 03XXXXXXXXX or +923XXXXXXXXX.",
+      phone: "Use 03XXXXXXXXX, +923XXXXXXXXX, or 00923XXXXXXXXX.",
       email: "Enter a valid email address or leave this field blank.",
       consent: "Confirm your delivery details before placing the order.",
     });

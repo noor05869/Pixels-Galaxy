@@ -2,6 +2,8 @@ import { products } from "../storefront/content";
 
 import type { CheckoutCartItem, TrustedOrderItem } from "./types";
 
+export const CATALOGUE_REVISION = "2026-08-25-zipstring-v1";
+
 const unavailable = () => {
   throw new Error("Cart item is unavailable");
 };
@@ -29,6 +31,7 @@ export function priceOrder(items: CheckoutCartItem[]): { items: TrustedOrderItem
     if (product.bundles.length === 0 && item.bundleId !== "card") {
       return unavailable();
     }
+    if (bundle && (item.quantity < bundle.quantity || item.quantity % bundle.quantity !== 0)) return unavailable();
 
     const unitPrice = bundle?.unitPrice ?? product.price;
     const lineTotal = unitPrice * item.quantity;

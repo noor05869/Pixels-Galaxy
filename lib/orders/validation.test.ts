@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { parseCheckoutInput } from "./validation";
+import { CATALOGUE_REVISION } from "./pricing";
 
 const validInput = {
   customerName: "  Ayesha Khan  ",
@@ -11,6 +12,8 @@ const validInput = {
   notes: "  Please call before delivery.  ",
   consent: true,
   website: "",
+  expectedTotal: 899900,
+  catalogueRevision: CATALOGUE_REVISION,
   items: [{ productId: "zipstring-original", bundleId: "one", quantity: 1 }],
 };
 
@@ -27,7 +30,12 @@ describe("parseCheckoutInput", () => {
   });
 
   it("accepts a Pakistani phone number in international format", () => {
-    expect(parseCheckoutInput({ ...validInput, phone: "+923324468116" }).phone).toBe("+923324468116");
+    expect(parseCheckoutInput({ ...validInput, phone: "+923324468116" }).phone).toBe("03324468116");
+  });
+
+  it("canonicalizes local and 0092 Pakistani phone formats", () => {
+    expect(parseCheckoutInput({ ...validInput, phone: "00923324468116" }).phone).toBe("03324468116");
+    expect(parseCheckoutInput(validInput).phone).toBe("03324468116");
   });
 
   it("normalizes empty optional text to undefined", () => {
@@ -50,6 +58,8 @@ describe("parseCheckoutInput", () => {
     ["a quantity below one", { items: [{ productId: "zipstring-original", bundleId: "one", quantity: 0 }] }],
     ["a quantity above 99", { items: [{ productId: "zipstring-original", bundleId: "one", quantity: 100 }] }],
     ["oversized notes", { notes: "n".repeat(1001) }],
+    ["a missing expected total", { expectedTotal: undefined }],
+    ["a missing catalogue revision", { catalogueRevision: undefined }],
   ])("rejects %s", (_reason, invalidFields) => {
     expect(() => parseCheckoutInput({ ...validInput, ...invalidFields })).toThrow();
   });

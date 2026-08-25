@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
+import { CATALOGUE_REVISION } from "../../../lib/orders/pricing";
 
 vi.mock("server-only", () => ({}));
 
@@ -10,6 +11,8 @@ const checkout = {
   address: "12 Example Street",
   notes: "Please call first",
   consent: true,
+  expectedTotal: 899900,
+  catalogueRevision: CATALOGUE_REVISION,
   items: [{ productId: "zipstring-original", bundleId: "one", quantity: 1 }],
 };
 
@@ -122,6 +125,17 @@ describe("POST /api/orders", () => {
 
     expect(response.status).toBe(503);
     await expect(response.json()).resolves.toEqual({ error: "Order service unavailable" });
+  });
+
+  it("returns 409 when the trusted server quote rejects a stale client quote", async () => {
+    const { createPostHandler } = await import("./route");
+    const { InvalidOrderError } = await import("../../../lib/orders/service");
+    const handler = createPostHandler({ submitOrder: async () => { throw new InvalidOrderError(); }, attempt: () => true, clientIpHeader: "x-test-client-ip" });
+
+    const response = await handler(jsonRequest(checkout));
+
+    expect(response.status).toBe(409);
+    await expect(response.json()).resolves.toEqual({ error: "Cart items changed; review your cart" });
   });
 
   it("returns 201 with only the public order number", async () => {

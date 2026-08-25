@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
+import { CATALOGUE_REVISION } from "./pricing";
 
 import type { NewOrder, StoredOrder } from "./types";
 
@@ -12,6 +13,8 @@ const checkout = {
   address: "12 Example Street",
   notes: "Please call first",
   consent: true,
+  expectedTotal: 899900,
+  catalogueRevision: CATALOGUE_REVISION,
   items: [{ productId: "zipstring-original", bundleId: "one", quantity: 1 }],
 };
 
@@ -39,6 +42,18 @@ describe("createOrderService", () => {
         items: [{ productId: "removed-product", bundleId: "card", quantity: 1 }],
       }),
     ).rejects.toBeInstanceOf(InvalidOrderError);
+  });
+
+  it.each([
+    { expectedTotal: 1 },
+    { catalogueRevision: "stale-catalogue" },
+  ])("rejects a stale non-authoritative quote before persistence", async (staleQuote) => {
+    const { createOrderService, InvalidOrderError } = await import("./service");
+    const createOrder = vi.fn();
+    const service = createOrderService({ repository: { createOrder, setNotificationState: vi.fn() }, notify: vi.fn(), createOrderNumber: () => "PG-ABC234" });
+
+    await expect(service({ ...checkout, ...staleQuote })).rejects.toBeInstanceOf(InvalidOrderError);
+    expect(createOrder).not.toHaveBeenCalled();
   });
 
   it("persists trusted order data before notifying and marks notification sent", async () => {

@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import type { FormEvent, InvalidEvent } from "react";
 
 import { useCart } from "@/components/cart/CartProvider";
-import { toCheckoutPayload } from "@/lib/orders/checkout-payload";
+import { createCheckoutPayload } from "@/lib/orders/checkout-payload";
 import { validateCheckoutFields } from "@/lib/orders/checkout-validation";
 import type { CheckoutErrors, CheckoutFieldName, CheckoutFormValues } from "@/lib/orders/checkout-validation";
 import { OrderSummary } from "./OrderSummary";
@@ -106,7 +106,7 @@ export function CheckoutForm() {
           notes: fields.notes.trim() || undefined,
           consent: fields.consent,
           website: fields.website,
-          items: toCheckoutPayload(lines),
+          ...createCheckoutPayload(lines),
         }),
       });
       const result: unknown = await response.json().catch(() => null);
@@ -118,8 +118,9 @@ export function CheckoutForm() {
         || !("orderNumber" in result)
         || typeof result.orderNumber !== "string"
       ) {
-        const message = result && typeof result === "object" && "error" in result && typeof result.error === "string"
-          ? result.error
+        const message = response.status === 409
+          ? "Your cart changed since this page loaded. Refresh the page, review the latest total, and try again."
+          : result && typeof result === "object" && "error" in result && typeof result.error === "string" ? result.error
           : "We could not place your order. Please try again.";
         setSubmissionError(message);
         setErrorFocusVersion((current) => current + 1);
@@ -224,8 +225,8 @@ export function CheckoutForm() {
 
           <div className="checkout-field">
             <label htmlFor="phone">Pakistani phone number *</label>
-            <input id="phone" name="phone" type="tel" inputMode="tel" autoComplete="tel" required pattern="(?:03[0-9]{9}|[+]923[0-9]{9})" title="Use 03XXXXXXXXX or +923XXXXXXXXX" placeholder="03XXXXXXXXX" aria-invalid={fieldErrors.phone ? true : undefined} aria-describedby={fieldErrors.phone ? "phone-hint phone-error" : "phone-hint"} value={fields.phone} onChange={(event) => updateField("phone", event.target.value)} />
-            <small id="phone-hint">Use 03XXXXXXXXX or +923XXXXXXXXX.</small>
+            <input id="phone" name="phone" type="tel" inputMode="tel" autoComplete="tel" required pattern="(?:03[0-9]{9}|[+]923[0-9]{9}|00923[0-9]{9})" title="Use 03XXXXXXXXX, +923XXXXXXXXX, or 00923XXXXXXXXX" placeholder="03XXXXXXXXX" aria-invalid={fieldErrors.phone ? true : undefined} aria-describedby={fieldErrors.phone ? "phone-hint phone-error" : "phone-hint"} value={fields.phone} onChange={(event) => updateField("phone", event.target.value)} />
+            <small id="phone-hint">Use 03XXXXXXXXX, +923XXXXXXXXX, or 00923XXXXXXXXX.</small>
             {fieldErrors.phone ? <span className="checkout-field-error" id="phone-error">{fieldErrors.phone}</span> : null}
           </div>
 

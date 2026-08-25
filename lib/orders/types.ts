@@ -16,6 +16,8 @@ export type CheckoutInput = {
   notes?: string;
   consent: true;
   website?: string;
+  expectedTotal: number;
+  catalogueRevision: string;
   items: CheckoutCartItem[];
 };
 

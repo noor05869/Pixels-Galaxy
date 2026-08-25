@@ -24,7 +24,7 @@ export default async function OrderPage({ params }: OrderPageProps) {
     order = await getOrderByNumber(orderNumber);
   } catch {
     return (
-      <main className="admin-page">
+      <main id="main-content" className="admin-page">
         <AdminDashboardHeader
           eyebrow="Order record"
           title={orderNumber}
@@ -43,7 +43,7 @@ export default async function OrderPage({ params }: OrderPageProps) {
   if (!order) notFound();
 
   return (
-    <main className="admin-page">
+    <main id="main-content" className="admin-page">
       <AdminDashboardHeader
         eyebrow="Order record"
         title={order.orderNumber}

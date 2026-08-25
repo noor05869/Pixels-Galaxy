@@ -9,13 +9,15 @@ const optionalText = (maxLength: number) =>
 
 const checkoutSchema = z.object({
   customerName: requiredText(100),
-  phone: z.string().trim().regex(/^(?:03\d{9}|\+923\d{9})$/),
+  phone: z.string().trim().regex(/^(?:03\d{9}|\+923\d{9}|00923\d{9})$/).transform((value) => value.startsWith("+92") ? `0${value.slice(3)}` : value.startsWith("0092") ? `0${value.slice(4)}` : value),
   email: optionalText(254).pipe(z.string().email().optional()),
   city: requiredText(100),
   address: requiredText(500),
   notes: optionalText(1000),
   consent: z.literal(true),
   website: z.string().trim().max(0).transform(() => undefined).optional(),
+  expectedTotal: z.number().int().nonnegative().max(Number.MAX_SAFE_INTEGER),
+  catalogueRevision: requiredText(100),
   items: z
     .array(
       z.object({

@@ -13,7 +13,7 @@ export default async function OrdersPage() {
     orders = await listOrders();
   } catch {
     return (
-      <main className="admin-page">
+      <main id="main-content" className="admin-page">
         <AdminDashboardHeader
           eyebrow="Private order dashboard"
           title="COD orders"
@@ -28,7 +28,7 @@ export default async function OrdersPage() {
   }
 
   return (
-    <main className="admin-page">
+    <main id="main-content" className="admin-page">
       <AdminDashboardHeader
         eyebrow="Private order dashboard"
         title="COD orders"

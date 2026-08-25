@@ -18,6 +18,7 @@ import {
 } from "../../../../lib/admin/session";
 
 const MAX_PASSWORD_LENGTH = 1_024;
+const MAX_LOGIN_BODY_BYTES = 4 * 1_024;
 const DUMMY_PASSWORD_HASH = `scrypt$${Buffer.alloc(16).toString("base64url")}$${Buffer.alloc(64).toString("base64url")}`;
 
 type LoginHandlerDependencies = {
@@ -44,22 +45,30 @@ function passwordFrom(value: unknown): string | null {
   return password;
 }
 
+async function readLoginBody(request: Request): Promise<string> {
+  const declaredLength = Number(request.headers.get("content-length"));
+  if (Number.isFinite(declaredLength) && declaredLength > MAX_LOGIN_BODY_BYTES) throw new Error("invalid");
+  if (!request.body) return "";
+  const reader = request.body.getReader(); const chunks: Uint8Array[] = []; let size = 0;
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    size += value.byteLength;
+    if (size > MAX_LOGIN_BODY_BYTES) { await reader.cancel().catch(() => undefined); throw new Error("invalid"); }
+    chunks.push(value);
+  }
+  const body = new Uint8Array(size); let offset = 0;
+  for (const chunk of chunks) { body.set(chunk, offset); offset += chunk.byteLength; }
+  return new TextDecoder().decode(body);
+}
+
 export function createLoginHandler(
   dependencies: LoginHandlerDependencies,
 ): (request: Request) => Promise<Response> {
   return async (request) => {
-    let value: unknown;
-    try {
-      if (request.headers.get("content-type")?.split(";", 1)[0].trim().toLowerCase() !== "application/json") {
-        throw new Error("Invalid content type");
-      }
-      value = await request.json();
-    } catch {
+    if (request.headers.get("content-type")?.split(";", 1)[0].trim().toLowerCase() !== "application/json") {
       return jsonResponse({ error: "Invalid sign-in request" }, 400);
     }
-
-    const password = passwordFrom(value);
-    if (!password) return jsonResponse({ error: "Invalid sign-in request" }, 400);
 
     let reservation: AdminLoginReservation | null;
     try {
@@ -75,6 +84,20 @@ export function createLoginHandler(
       } catch {
         // The pending reservation remains fail-closed until the shared window expires.
       }
+    }
+
+    let value: unknown;
+    try {
+      value = JSON.parse(await readLoginBody(request));
+    } catch {
+      await retainFailedReservation();
+      return jsonResponse({ error: "Invalid sign-in request" }, 400);
+    }
+
+    const password = passwordFrom(value);
+    if (!password) {
+      await retainFailedReservation();
+      return jsonResponse({ error: "Invalid sign-in request" }, 400);
     }
 
     let authenticated = false;

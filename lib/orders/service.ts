@@ -2,7 +2,7 @@ import "server-only";
 
 import { createOrderNumber as generateOrderNumber } from "./order-number";
 import { sendOrderNotification } from "./notification";
-import { priceOrder } from "./pricing";
+import { CATALOGUE_REVISION, priceOrder } from "./pricing";
 import {
   createOrder,
   OrderNumberCollisionError,
@@ -59,6 +59,7 @@ export function createOrderService(
     } catch {
       throw new InvalidOrderError();
     }
+    if (input.catalogueRevision !== CATALOGUE_REVISION || input.expectedTotal !== pricedOrder.total) throw new InvalidOrderError();
     const savedOrder = await persistWithUniqueOrderNumber(
       {
         customerName: input.customerName,

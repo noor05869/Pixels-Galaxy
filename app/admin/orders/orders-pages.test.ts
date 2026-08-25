@@ -64,6 +64,7 @@ describe("admin order pages", () => {
     expect(html).toContain("Orders unavailable");
     expect(html).not.toContain("Supabase");
     expect(html).toContain("Log out");
+    expect(html).toContain('id="main-content"');
   });
 
   it("renders an announced busy state while list or detail navigation loads", async () => {
@@ -76,6 +77,7 @@ describe("admin order pages", () => {
     expect(html).toContain('aria-busy="true"');
     expect(html).toContain("Loading orders");
     expect(html).toContain("Fetching the latest Cash on Delivery records.");
+    expect(html).toContain('id="main-content"');
   });
 
   it("does not query storage for a malformed detail order number", async () => {
@@ -108,5 +110,6 @@ describe("admin order pages", () => {
     expect(html).toContain("Order unavailable");
     expect(html).not.toContain("Address leaked");
     expect(html).toContain("Log out");
+    expect(html).toContain('id="main-content"');
   });
 });
