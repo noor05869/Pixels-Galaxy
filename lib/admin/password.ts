@@ -18,6 +18,7 @@ function decodeBase64Url(value: string, expectedBytes: number): Buffer | null {
 
 export async function verifyPassword(password: string, encodedHash: string): Promise<boolean> {
   const parts = encodedHash.split("$");
+
   if (parts.length !== 3 || parts[0] !== "scrypt") return false;
 
   const salt = decodeBase64Url(parts[1], SALT_BYTES);

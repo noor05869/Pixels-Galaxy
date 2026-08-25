@@ -139,11 +139,13 @@ async function authenticateConfiguredPassword(password: string): Promise<boolean
   let encodedHash = DUMMY_PASSWORD_HASH;
   let configured = false;
   try {
-    encodedHash = getAdminConfig().adminPasswordHash;
+    // encodedHash = getAdminConfig().adminPasswordHash;
+    encodedHash = process.env.ADMIN_PASSWORD_HASH || " ";
     configured = true;
   } catch {
     // Perform the same expensive password derivation before returning the generic failure.
   }
+
 
   const verified = await verifyPassword(password, encodedHash);
   return configured && verified;

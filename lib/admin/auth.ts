@@ -7,5 +7,6 @@ import { ADMIN_SESSION_COOKIE, verifyAdminSession } from "./session";
 
 export async function requireAdmin(): Promise<void> {
   const token = (await cookies()).get(ADMIN_SESSION_COOKIE)?.value;
+
   if (!token || !(await verifyAdminSession(token))) redirect("/admin/login");
 }

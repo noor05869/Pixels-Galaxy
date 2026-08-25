@@ -7,7 +7,7 @@ import { createClient } from "@supabase/supabase-js";
 
 import { getSupabaseConfig } from "../config/server";
 
-const DEFAULT_CLIENT_LIMIT = 5;
+const DEFAULT_CLIENT_LIMIT = 10;
 const DEFAULT_WINDOW_MS = 15 * 60 * 1_000;
 const DEFAULT_GLOBAL_LIMIT = 500;
 const DEFAULT_TRUSTED_RESERVE = 20;
