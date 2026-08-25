@@ -1,6 +1,14 @@
 import { NextResponse } from "next/server";
 
-import { getAdminConfig } from "../../../../lib/config/server";
+import { getAdminConfig, getAdminRateLimitConfig } from "../../../../lib/config/server";
+import {
+  adminLoginClientKey,
+  getAdminLoginRateLimiter,
+} from "../../../../lib/admin/login-rate-limit";
+import type {
+  AdminLoginRateLimiter,
+  AdminLoginReservation,
+} from "../../../../lib/admin/login-rate-limit";
 import { verifyPassword } from "../../../../lib/admin/password";
 import {
   ADMIN_SESSION_COOKIE,
@@ -10,25 +18,14 @@ import {
 } from "../../../../lib/admin/session";
 
 const MAX_PASSWORD_LENGTH = 1_024;
-const FAILURE_LIMIT = 5;
-const FAILURE_WINDOW_MS = 15 * 60 * 1_000;
 const DUMMY_PASSWORD_HASH = `scrypt$${Buffer.alloc(16).toString("base64url")}$${Buffer.alloc(64).toString("base64url")}`;
-
-type LoginFailureThrottle = {
-  isBlocked(): boolean;
-  recordFailure(): void;
-  reset(): void;
-};
 
 type LoginHandlerDependencies = {
   authenticate(password: string): Promise<boolean>;
   createSession(): Promise<string>;
-  throttle: LoginFailureThrottle;
+  clientKey(request: Request): string;
+  rateLimiter: AdminLoginRateLimiter;
   secureCookie: boolean;
-};
-
-type FailureThrottleOptions = {
-  now?: () => number;
 };
 
 function jsonResponse(body: Record<string, string | boolean>, status: number): NextResponse {
@@ -47,32 +44,6 @@ function passwordFrom(value: unknown): string | null {
   return password;
 }
 
-export function createLoginFailureThrottle(
-  options: FailureThrottleOptions = {},
-): LoginFailureThrottle {
-  const now = options.now ?? Date.now;
-  let failures: number[] = [];
-
-  function prune(): void {
-    const cutoff = now() - FAILURE_WINDOW_MS;
-    failures = failures.filter((timestamp) => timestamp > cutoff);
-  }
-
-  return {
-    isBlocked() {
-      prune();
-      return failures.length >= FAILURE_LIMIT;
-    },
-    recordFailure() {
-      prune();
-      failures.push(now());
-    },
-    reset() {
-      failures = [];
-    },
-  };
-}
-
 export function createLoginHandler(
   dependencies: LoginHandlerDependencies,
 ): (request: Request) => Promise<Response> {
@@ -89,8 +60,21 @@ export function createLoginHandler(
 
     const password = passwordFrom(value);
     if (!password) return jsonResponse({ error: "Invalid sign-in request" }, 400);
-    if (dependencies.throttle.isBlocked()) {
-      return jsonResponse({ error: "Too many sign-in attempts" }, 429);
+
+    let reservation: AdminLoginReservation | null;
+    try {
+      reservation = await dependencies.rateLimiter.reserve(dependencies.clientKey(request));
+    } catch {
+      return jsonResponse({ error: "Unable to sign in" }, 401);
+    }
+    if (!reservation) return jsonResponse({ error: "Too many sign-in attempts" }, 429);
+
+    async function retainFailedReservation(): Promise<void> {
+      try {
+        await dependencies.rateLimiter.complete(reservation!, "failure");
+      } catch {
+        // The pending reservation remains fail-closed until the shared window expires.
+      }
     }
 
     let authenticated = false;
@@ -101,23 +85,30 @@ export function createLoginHandler(
     }
 
     if (!authenticated) {
-      dependencies.throttle.recordFailure();
+      await retainFailedReservation();
+      return jsonResponse({ error: "Unable to sign in" }, 401);
+    }
+
+    let session: string;
+    try {
+      session = await dependencies.createSession();
+    } catch {
+      await retainFailedReservation();
       return jsonResponse({ error: "Unable to sign in" }, 401);
     }
 
     try {
-      const session = await dependencies.createSession();
-      const response = jsonResponse({ ok: true }, 200);
-      response.cookies.set(ADMIN_SESSION_COOKIE, session, {
-        ...adminSessionCookieOptions(dependencies.secureCookie),
-        maxAge: ADMIN_SESSION_MAX_AGE_SECONDS,
-      });
-      dependencies.throttle.reset();
-      return response;
+      await dependencies.rateLimiter.complete(reservation, "success");
     } catch {
-      dependencies.throttle.recordFailure();
       return jsonResponse({ error: "Unable to sign in" }, 401);
     }
+
+    const response = jsonResponse({ ok: true }, 200);
+    response.cookies.set(ADMIN_SESSION_COOKIE, session, {
+      ...adminSessionCookieOptions(dependencies.secureCookie),
+      maxAge: ADMIN_SESSION_MAX_AGE_SECONDS,
+    });
+    return response;
   };
 }
 
@@ -135,13 +126,17 @@ async function authenticateConfiguredPassword(password: string): Promise<boolean
   return configured && verified;
 }
 
-const loginFailureThrottle = createLoginFailureThrottle();
-
 export async function POST(request: Request): Promise<Response> {
-  return createLoginHandler({
-    authenticate: authenticateConfiguredPassword,
-    createSession: createAdminSession,
-    throttle: loginFailureThrottle,
-    secureCookie: process.env.NODE_ENV === "production",
-  })(request);
+  try {
+    const { clientIpHeader } = getAdminRateLimitConfig();
+    return await createLoginHandler({
+      authenticate: authenticateConfiguredPassword,
+      createSession: createAdminSession,
+      clientKey: (candidate) => adminLoginClientKey(candidate, clientIpHeader),
+      rateLimiter: getAdminLoginRateLimiter(),
+      secureCookie: process.env.NODE_ENV === "production",
+    })(request);
+  } catch {
+    return jsonResponse({ error: "Unable to sign in" }, 401);
+  }
 }

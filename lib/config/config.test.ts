@@ -11,6 +11,7 @@ const serverEnvironmentKeys = [
   "ORDER_FROM_EMAIL",
   "ADMIN_PASSWORD_HASH",
   "ADMIN_SESSION_SECRET",
+  "ADMIN_CLIENT_IP_HEADER",
   "ORDER_CLIENT_IP_HEADER",
 ] as const;
 
@@ -70,6 +71,14 @@ describe("server configuration by responsibility", () => {
     const { getOrderApiConfig } = await import("./server");
 
     expect(getOrderApiConfig()).toEqual({ clientIpHeader: "x-vercel-forwarded-for" });
+  });
+
+  it("loads the admin trusted client identity header independently", async () => {
+    clearServerEnvironment();
+    vi.stubEnv("ADMIN_CLIENT_IP_HEADER", "X-Edge-Client-IP");
+    const { getAdminRateLimitConfig } = await import("./server");
+
+    expect(getAdminRateLimitConfig()).toEqual({ clientIpHeader: "x-edge-client-ip" });
   });
 
   it("returns one generic error for an incomplete responsibility", async () => {

@@ -22,6 +22,10 @@ export type OrderApiConfig = {
   clientIpHeader: string;
 };
 
+export type AdminRateLimitConfig = {
+  clientIpHeader: string;
+};
+
 const supabaseConfigSchema = z.object({
   supabaseUrl: z.url(),
   supabaseSecretKey: z.string().min(1),
@@ -40,6 +44,14 @@ const adminConfigSchema = z.object({
 });
 
 const orderApiConfigSchema = z.object({
+  clientIpHeader: z
+    .string()
+    .trim()
+    .regex(/^[!#$%&'*+\-.^_`|~0-9A-Za-z]+$/)
+    .transform((value) => value.toLowerCase()),
+});
+
+const adminRateLimitConfigSchema = z.object({
   clientIpHeader: z
     .string()
     .trim()
@@ -79,5 +91,11 @@ export function getAdminConfig(): AdminConfig {
 export function getOrderApiConfig(): OrderApiConfig {
   return parseConfig(orderApiConfigSchema, {
     clientIpHeader: process.env.ORDER_CLIENT_IP_HEADER,
+  });
+}
+
+export function getAdminRateLimitConfig(): AdminRateLimitConfig {
+  return parseConfig(adminRateLimitConfigSchema, {
+    clientIpHeader: process.env.ADMIN_CLIENT_IP_HEADER,
   });
 }

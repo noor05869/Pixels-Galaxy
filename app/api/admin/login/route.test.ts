@@ -10,13 +10,27 @@ function loginRequest(value: unknown): Request {
   });
 }
 
+async function memoryLimiter() {
+  const {
+    createMemoryAdminLoginRateLimiter,
+    createMemoryAdminLoginRateLimitState,
+  } = await import("../../../../lib/admin/login-rate-limit");
+  const state = createMemoryAdminLoginRateLimitState();
+  return {
+    limiter: createMemoryAdminLoginRateLimiter({ state, now: () => 1_000 }),
+    state,
+  };
+}
+
 describe("POST /api/admin/login", () => {
-  it("returns a generic 400 for malformed request bodies", async () => {
-    const { createLoginFailureThrottle, createLoginHandler } = await import("./route");
+  it("returns a generic 400 for malformed request bodies without reserving capacity", async () => {
+    const { createLoginHandler } = await import("./route");
+    const { limiter, state } = await memoryLimiter();
     const handler = createLoginHandler({
       authenticate: async () => true,
       createSession: async () => "session-token",
-      throttle: createLoginFailureThrottle(),
+      clientKey: () => "a".repeat(64),
+      rateLimiter: limiter,
       secureCookie: true,
     });
 
@@ -26,24 +40,26 @@ describe("POST /api/admin/login", () => {
     expect(response.headers.get("cache-control")).toBe("no-store");
     await expect(response.json()).resolves.toEqual({ error: "Invalid sign-in request" });
     expect(response.headers.get("set-cookie")).toBeNull();
+    expect(state.attempts.size).toBe(0);
   });
 
   it("does not publicly distinguish a wrong password from missing configuration", async () => {
-    const { createLoginFailureThrottle, createLoginHandler } = await import("./route");
-    const makeHandler = (authenticate: (password: string) => Promise<boolean>) =>
+    const { createLoginHandler } = await import("./route");
+    const makeHandler = async (authenticate: (password: string) => Promise<boolean>) =>
       createLoginHandler({
         authenticate,
         createSession: async () => "session-token",
-        throttle: createLoginFailureThrottle(),
+        clientKey: () => "a".repeat(64),
+        rateLimiter: (await memoryLimiter()).limiter,
         secureCookie: true,
       });
 
-    const wrongPasswordResponse = await makeHandler(async () => false)(
+    const wrongPasswordResponse = await (await makeHandler(async () => false))(
       loginRequest({ password: "wrong password" }),
     );
-    const missingConfigResponse = await makeHandler(async () => {
+    const missingConfigResponse = await (await makeHandler(async () => {
       throw new Error("ADMIN_PASSWORD_HASH is unavailable");
-    })(loginRequest({ password: "same public result" }));
+    }))(loginRequest({ password: "same public result" }));
 
     expect(missingConfigResponse.status).toBe(wrongPasswordResponse.status);
     expect(missingConfigResponse.status).toBe(401);
@@ -53,35 +69,50 @@ describe("POST /api/admin/login", () => {
     expect(missingConfigResponse.headers.get("set-cookie")).toBeNull();
   });
 
-  it("throttles the sixth request after five failures in fifteen minutes", async () => {
-    let currentTime = 1_000;
-    const { createLoginFailureThrottle, createLoginHandler } = await import("./route");
-    const throttle = createLoginFailureThrottle({ now: () => currentTime });
+  it("atomically throttles the sixth concurrent request before expensive authentication", async () => {
+    const { createLoginHandler } = await import("./route");
+    const { limiter } = await memoryLimiter();
+    let releaseAuthentication!: () => void;
+    let reportFiveStarted!: () => void;
+    let authenticateCalls = 0;
+    const authenticationGate = new Promise<void>((resolve) => {
+      releaseAuthentication = resolve;
+    });
+    const fiveStarted = new Promise<void>((resolve) => {
+      reportFiveStarted = resolve;
+    });
     const handler = createLoginHandler({
-      authenticate: async () => false,
+      authenticate: async () => {
+        authenticateCalls += 1;
+        if (authenticateCalls === 5) reportFiveStarted();
+        await authenticationGate;
+        return false;
+      },
       createSession: async () => "session-token",
-      throttle,
+      clientKey: () => "a".repeat(64),
+      rateLimiter: limiter,
       secureCookie: true,
     });
 
-    const responses: Response[] = [];
-    for (let attempt = 0; attempt < 6; attempt += 1) {
-      responses.push(await handler(loginRequest({ password: `wrong-${attempt}` })));
-    }
+    const pendingResponses = Array.from({ length: 6 }, (_, index) =>
+      handler(loginRequest({ password: `wrong-${index}` })),
+    );
+    await fiveStarted;
+    releaseAuthentication();
+    const responses = await Promise.all(pendingResponses);
 
-    expect(responses.map((response) => response.status)).toEqual([401, 401, 401, 401, 401, 429]);
-    await expect(responses[5].json()).resolves.toEqual({ error: "Too many sign-in attempts" });
-
-    currentTime += 15 * 60 * 1_000;
-    expect((await handler(loginRequest({ password: "try-again" }))).status).toBe(401);
+    expect(authenticateCalls).toBe(5);
+    expect(responses.map((response) => response.status).sort()).toEqual([401, 401, 401, 401, 401, 429]);
   });
 
   it("sets the signed session in a secure eight-hour cookie after authentication", async () => {
-    const { createLoginFailureThrottle, createLoginHandler } = await import("./route");
+    const { createLoginHandler } = await import("./route");
+    const { limiter, state } = await memoryLimiter();
     const handler = createLoginHandler({
       authenticate: async (password) => password === "valid password",
       createSession: async () => "signed.session-token",
-      throttle: createLoginFailureThrottle(),
+      clientKey: () => "a".repeat(64),
+      rateLimiter: limiter,
       secureCookie: true,
     });
 
@@ -96,16 +127,72 @@ describe("POST /api/admin/login", () => {
     expect(cookie).toContain("HttpOnly");
     expect(cookie).toContain("Secure");
     expect(cookie.toLowerCase()).toContain("samesite=strict");
+    expect(state.attempts.size).toBe(0);
+    expect(state.trustedUntil.get("a".repeat(64))).toBeGreaterThan(1_000);
   });
 
   it("uses the generic credential failure if session creation is unavailable", async () => {
-    const { createLoginFailureThrottle, createLoginHandler } = await import("./route");
+    const { createLoginHandler } = await import("./route");
+    const { limiter, state } = await memoryLimiter();
     const handler = createLoginHandler({
       authenticate: async () => true,
       createSession: async () => {
         throw new Error("ADMIN_SESSION_SECRET leaked diagnostic");
       },
-      throttle: createLoginFailureThrottle(),
+      clientKey: () => "a".repeat(64),
+      rateLimiter: limiter,
+      secureCookie: true,
+    });
+
+    const response = await handler(loginRequest({ password: "valid password" }));
+
+    expect(response.status).toBe(401);
+    await expect(response.json()).resolves.toEqual({ error: "Unable to sign in" });
+    expect(response.headers.get("set-cookie")).toBeNull();
+    expect(state.attempts.size).toBe(1);
+  });
+
+  it("makes unavailable reservation storage indistinguishable from bad credentials", async () => {
+    const { createLoginHandler } = await import("./route");
+    let authenticateCalls = 0;
+    const handler = createLoginHandler({
+      authenticate: async () => {
+        authenticateCalls += 1;
+        return false;
+      },
+      createSession: async () => "session-token",
+      clientKey: () => "a".repeat(64),
+      rateLimiter: {
+        async reserve() {
+          throw new Error("SUPABASE_SECRET_KEY provider diagnostic");
+        },
+        async complete() {},
+      },
+      secureCookie: true,
+    });
+
+    const response = await handler(loginRequest({ password: "not-logged" }));
+
+    expect(response.status).toBe(401);
+    await expect(response.json()).resolves.toEqual({ error: "Unable to sign in" });
+    expect(response.headers.get("set-cookie")).toBeNull();
+    expect(authenticateCalls).toBe(0);
+  });
+
+  it("uses the generic credential failure and no cookie when successful completion cannot be stored", async () => {
+    const { createLoginHandler } = await import("./route");
+    const handler = createLoginHandler({
+      authenticate: async () => true,
+      createSession: async () => "signed.session-token",
+      clientKey: () => "a".repeat(64),
+      rateLimiter: {
+        async reserve() {
+          return { id: "reservation-1" };
+        },
+        async complete() {
+          throw new Error("database unavailable");
+        },
+      },
       secureCookie: true,
     });
 
