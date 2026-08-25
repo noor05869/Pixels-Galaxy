@@ -1,3 +1,4 @@
+import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -63,6 +64,18 @@ describe("admin order pages", () => {
     expect(html).toContain("Orders unavailable");
     expect(html).not.toContain("Supabase");
     expect(html).toContain("Log out");
+  });
+
+  it("renders an announced busy state while list or detail navigation loads", async () => {
+    const { default: OrdersLoading } = await import("./loading");
+
+    const html = renderToStaticMarkup(createElement(OrdersLoading));
+
+    expect(html).toContain('role="status"');
+    expect(html).toContain('aria-live="polite"');
+    expect(html).toContain('aria-busy="true"');
+    expect(html).toContain("Loading orders");
+    expect(html).toContain("Fetching the latest Cash on Delivery records.");
   });
 
   it("does not query storage for a malformed detail order number", async () => {
