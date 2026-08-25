@@ -15,35 +15,157 @@ This guide configures the Pixels Galaxy Cash on Delivery order system for produc
 3. Copy the project URL to `SUPABASE_URL`.
 4. Create or copy a server-side Supabase secret key for `SUPABASE_SECRET_KEY`. It must be able to use the `service_role` privileges required by this application. Never expose this key through a `NEXT_PUBLIC_` variable, browser code, logs, or screenshots.
 
-### Verify RLS and grants
+### Verify RLS
 
-Run this read-only audit in the SQL Editor after all migrations:
+Run these read-only audits in the SQL Editor after all migrations:
+
+```sql
+with expected(table_name) as (
+  values
+    ('orders'),
+    ('admin_login_attempts'),
+    ('admin_login_trusted_clients')
+)
+select
+  expected.table_name,
+  tables.oid is not null as table_exists,
+  tables.relrowsecurity as rls_enabled,
+  tables.oid is not null and tables.relrowsecurity as matches_contract
+from expected
+left join pg_class as tables
+  on tables.oid = to_regclass(format('public.%I', expected.table_name))
+order by expected.table_name;
+```
+
+This must return three rows with `table_exists = true`, `rls_enabled = true`, and `matches_contract = true`.
+
+Confirm separately that no RLS policies grant browser access:
 
 ```sql
 select
-  c.relname as table_name,
-  c.relrowsecurity as rls_enabled,
-  has_table_privilege('anon', format('public.%I', c.relname), 'select') as anon_can_select,
-  has_table_privilege('authenticated', format('public.%I', c.relname), 'select') as authenticated_can_select
-from pg_class c
-join pg_namespace n on n.oid = c.relnamespace
-where n.nspname = 'public'
-  and c.relname in ('orders', 'admin_login_attempts', 'admin_login_trusted_clients')
-order by c.relname;
-```
-
-Every row must show `rls_enabled = true`, `anon_can_select = false`, and `authenticated_can_select = false`.
-
-Also confirm there are no browser-role policies on these tables:
-
-```sql
-select schemaname, tablename, policyname, roles, cmd
+  count(*) as policy_count,
+  count(*) = 0 as matches_contract
 from pg_policies
 where schemaname = 'public'
-  and tablename in ('orders', 'admin_login_attempts', 'admin_login_trusted_clients');
+  and tablename in (
+    'orders',
+    'admin_login_attempts',
+    'admin_login_trusted_clients'
+  );
 ```
 
-The expected result is no rows. In the function permissions view, confirm `anon` and `authenticated` cannot execute `reserve_admin_login_attempt` or `complete_admin_login_attempt`; only `service_role` should have execute access. As a final negative check, use a Supabase client configured only with the project's anon/publishable key and verify that selecting `public.orders` is rejected. Do not use real customer data for this check.
+This must return `policy_count = 0` and `matches_contract = true`.
+
+### Verify exact table privileges
+
+The following query explicitly checks the seven baseline table privileges, including all four DML privileges, and automatically adds any further table privileges supported by the connected PostgreSQL version (such as `MAINTAIN`). The lowercase lookup name `public` means PostgreSQL's `PUBLIC` pseudo-role; the display name keeps it distinct from the `public` schema.
+
+```sql
+with expected_roles(display_role, lookup_role, expected_allowed) as (
+  values
+    ('PUBLIC', 'public', false),
+    ('anon', 'anon', false),
+    ('authenticated', 'authenticated', false),
+    ('service_role', 'service_role', true)
+),
+expected_tables(table_name) as (
+  values
+    ('orders'),
+    ('admin_login_attempts'),
+    ('admin_login_trusted_clients')
+),
+baseline_privileges(privilege_name) as (
+  values
+    ('SELECT'),
+    ('INSERT'),
+    ('UPDATE'),
+    ('DELETE'),
+    ('TRUNCATE'),
+    ('REFERENCES'),
+    ('TRIGGER')
+),
+expected_privileges(privilege_name) as (
+  select privilege_name from baseline_privileges
+  union
+  select upper(privilege_type)
+  from aclexplode(
+    acldefault(
+      'r',
+      (select oid from pg_roles where rolname = current_user)
+    )
+  )
+),
+actual as (
+  select
+    roles.display_role,
+    tables.table_name,
+    privileges.privilege_name,
+    roles.expected_allowed,
+    has_table_privilege(
+      roles.lookup_role,
+      to_regclass(format('public.%I', tables.table_name)),
+      privileges.privilege_name
+    ) as actual_allowed
+  from expected_roles as roles
+  cross join expected_tables as tables
+  cross join expected_privileges as privileges
+)
+select
+  display_role as role_name,
+  table_name,
+  privilege_name,
+  expected_allowed,
+  actual_allowed,
+  actual_allowed is not distinct from expected_allowed as matches_contract
+from actual
+order by table_name, role_name, privilege_name;
+```
+
+This must return at least 84 rows, all with `matches_contract = true`: `PUBLIC`, `anon`, and `authenticated` must have no table privilege, while `service_role` must have every listed privilege on all three tables. PostgreSQL versions with additional table privileges return more rows so those privileges are audited rather than silently omitted.
+
+### Verify exact RPC privileges
+
+Use the exact PostgreSQL function signatures so an overloaded or similarly named function cannot produce a false pass:
+
+```sql
+with expected_roles(display_role, lookup_role, expected_allowed) as (
+  values
+    ('PUBLIC', 'public', false),
+    ('anon', 'anon', false),
+    ('authenticated', 'authenticated', false),
+    ('service_role', 'service_role', true)
+),
+expected_functions(function_signature) as (
+  values
+    ('public.reserve_admin_login_attempt(text)'),
+    ('public.complete_admin_login_attempt(uuid,text)')
+),
+actual as (
+  select
+    roles.display_role,
+    functions.function_signature,
+    roles.expected_allowed,
+    has_function_privilege(
+      roles.lookup_role,
+      to_regprocedure(functions.function_signature),
+      'EXECUTE'
+    ) as actual_allowed
+  from expected_roles as roles
+  cross join expected_functions as functions
+)
+select
+  display_role as role_name,
+  function_signature,
+  expected_allowed,
+  actual_allowed,
+  actual_allowed is not distinct from expected_allowed as matches_contract
+from actual
+order by function_signature, role_name;
+```
+
+This must return eight rows, all with `matches_contract = true`: `PUBLIC`, `anon`, and `authenticated` must be denied `EXECUTE`, and `service_role` must be allowed for both exact signatures.
+
+As a final negative check, use a Supabase client configured only with the project's anon/publishable key and verify that selecting `public.orders` is rejected. Do not use real customer data for this check.
 
 ## 2. Resend sending domain
 
