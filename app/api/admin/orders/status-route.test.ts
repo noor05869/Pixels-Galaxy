@@ -45,7 +45,7 @@ function context(orderNumber: string) {
 
 describe("PATCH /api/admin/orders/:orderNumber/status", () => {
   it("authenticates before reading malformed inputs and returns 401 without a session", async () => {
-    const { createStatusHandler } = await import("./[orderNumber]/status/route");
+    const { createStatusHandler } = await import("./[orderNumber]/status/handler");
     const updateOrderStatus = vi.fn();
     const handler = createStatusHandler({
       authenticate: async () => false,
@@ -61,7 +61,7 @@ describe("PATCH /api/admin/orders/:orderNumber/status", () => {
   });
 
   it("rejects a malformed public order number", async () => {
-    const { createStatusHandler } = await import("./[orderNumber]/status/route");
+    const { createStatusHandler } = await import("./[orderNumber]/status/handler");
     const updateOrderStatus = vi.fn();
     const handler = createStatusHandler({
       authenticate: async () => true,
@@ -76,7 +76,7 @@ describe("PATCH /api/admin/orders/:orderNumber/status", () => {
   });
 
   it("rejects a status outside the allowed order states", async () => {
-    const { createStatusHandler } = await import("./[orderNumber]/status/route");
+    const { createStatusHandler } = await import("./[orderNumber]/status/handler");
     const updateOrderStatus = vi.fn();
     const handler = createStatusHandler({
       authenticate: async () => true,
@@ -91,7 +91,7 @@ describe("PATCH /api/admin/orders/:orderNumber/status", () => {
   });
 
   it("returns 404 when the valid order number is absent", async () => {
-    const { createStatusHandler } = await import("./[orderNumber]/status/route");
+    const { createStatusHandler } = await import("./[orderNumber]/status/handler");
     const handler = createStatusHandler({
       authenticate: async () => true,
       updateOrderStatus: async () => {
@@ -106,7 +106,7 @@ describe("PATCH /api/admin/orders/:orderNumber/status", () => {
   });
 
   it("returns a generic 503 when order storage is unavailable", async () => {
-    const { createStatusHandler } = await import("./[orderNumber]/status/route");
+    const { createStatusHandler } = await import("./[orderNumber]/status/handler");
     const handler = createStatusHandler({
       authenticate: async () => true,
       updateOrderStatus: async () => {
@@ -121,7 +121,7 @@ describe("PATCH /api/admin/orders/:orderNumber/status", () => {
   });
 
   it("returns only the minimal public update fields after a valid status change", async () => {
-    const { createStatusHandler } = await import("./[orderNumber]/status/route");
+    const { createStatusHandler } = await import("./[orderNumber]/status/handler");
     const updateOrderStatus = vi.fn(async () => validOrder);
     const handler = createStatusHandler({
       authenticate: async () => true,

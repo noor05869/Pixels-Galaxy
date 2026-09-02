@@ -24,7 +24,7 @@ async function memoryLimiter() {
 
 describe("POST /api/admin/login", () => {
   it("returns a generic 400 for malformed request bodies and counts the attempt", async () => {
-    const { createLoginHandler } = await import("./route");
+    const { createLoginHandler } = await import("./handler");
     const { limiter, state } = await memoryLimiter();
     const handler = createLoginHandler({
       authenticate: async () => true,
@@ -44,7 +44,7 @@ describe("POST /api/admin/login", () => {
   });
 
   it("rejects a declared oversized body before authentication and counts the attempt", async () => {
-    const { createLoginHandler } = await import("./route");
+    const { createLoginHandler } = await import("./handler");
     const { limiter, state } = await memoryLimiter();
     const authenticate = vi.fn(async () => true);
     const handler = createLoginHandler({ authenticate, createSession: async () => "session", clientKey: () => "a".repeat(64), rateLimiter: limiter, secureCookie: true });
@@ -59,7 +59,7 @@ describe("POST /api/admin/login", () => {
   });
 
   it("rejects a streamed oversized body before authentication and counts the attempt", async () => {
-    const { createLoginHandler } = await import("./route");
+    const { createLoginHandler } = await import("./handler");
     const { limiter, state } = await memoryLimiter();
     const authenticate = vi.fn(async () => true);
     const handler = createLoginHandler({ authenticate, createSession: async () => "session", clientKey: () => "a".repeat(64), rateLimiter: limiter, secureCookie: true });
@@ -74,7 +74,7 @@ describe("POST /api/admin/login", () => {
   });
 
   it("does not publicly distinguish a wrong password from missing configuration", async () => {
-    const { createLoginHandler } = await import("./route");
+    const { createLoginHandler } = await import("./handler");
     const makeHandler = async (authenticate: (password: string) => Promise<boolean>) =>
       createLoginHandler({
         authenticate,
@@ -100,7 +100,7 @@ describe("POST /api/admin/login", () => {
   });
 
   it("atomically throttles the sixth concurrent request before expensive authentication", async () => {
-    const { createLoginHandler } = await import("./route");
+    const { createLoginHandler } = await import("./handler");
     const { limiter } = await memoryLimiter();
     let releaseAuthentication!: () => void;
     let reportFiveStarted!: () => void;
@@ -136,7 +136,7 @@ describe("POST /api/admin/login", () => {
   });
 
   it("sets the signed session in a secure eight-hour cookie after authentication", async () => {
-    const { createLoginHandler } = await import("./route");
+    const { createLoginHandler } = await import("./handler");
     const { limiter, state } = await memoryLimiter();
     const handler = createLoginHandler({
       authenticate: async (password) => password === "valid password",
@@ -162,7 +162,7 @@ describe("POST /api/admin/login", () => {
   });
 
   it("uses the generic credential failure if session creation is unavailable", async () => {
-    const { createLoginHandler } = await import("./route");
+    const { createLoginHandler } = await import("./handler");
     const { limiter, state } = await memoryLimiter();
     const handler = createLoginHandler({
       authenticate: async () => true,
@@ -183,7 +183,7 @@ describe("POST /api/admin/login", () => {
   });
 
   it("makes unavailable reservation storage indistinguishable from bad credentials", async () => {
-    const { createLoginHandler } = await import("./route");
+    const { createLoginHandler } = await import("./handler");
     let authenticateCalls = 0;
     const handler = createLoginHandler({
       authenticate: async () => {
@@ -210,7 +210,7 @@ describe("POST /api/admin/login", () => {
   });
 
   it("uses the generic credential failure and no cookie when successful completion cannot be stored", async () => {
-    const { createLoginHandler } = await import("./route");
+    const { createLoginHandler } = await import("./handler");
     const handler = createLoginHandler({
       authenticate: async () => true,
       createSession: async () => "signed.session-token",
@@ -236,7 +236,7 @@ describe("POST /api/admin/login", () => {
 
 describe("POST /api/admin/logout", () => {
   it("expires the admin cookie with the same security attributes", async () => {
-    const { createLogoutHandler } = await import("../logout/route");
+    const { createLogoutHandler } = await import("../logout/handler");
 
     const response = await createLogoutHandler({ secureCookie: true })();
     const cookie = response.headers.get("set-cookie") ?? "";

@@ -5,7 +5,7 @@ import { Menu, Search, ShoppingBag, User, X } from "lucide-react";
 import { useState } from "react";
 import { useCart } from "@/components/cart/CartProvider";
 
-const links = [["Shop", "#shop"], ["Tricks", "#tricks"], ["Our Story", "#story"], ["Contact", "#footer"]];
+const links = [["Shop", "#featured"], ["Colours", "#featured"], ["Product Info", "#story"], ["Contact", "#footer"]];
 
 export function SiteHeader() {
   const [open, setOpen] = useState(false);

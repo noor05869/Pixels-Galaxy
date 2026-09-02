@@ -24,6 +24,7 @@ const checkoutSchema = z.object({
         productId: requiredText(100),
         bundleId: requiredText(100),
         quantity: z.number().int().min(1).max(99),
+        colors: z.array(z.enum(["blue", "green", "pink"])).length(2).optional(),
       }),
     )
     .min(1)

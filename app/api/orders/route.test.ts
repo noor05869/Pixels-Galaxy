@@ -26,7 +26,7 @@ function jsonRequest(value: unknown, headers?: Record<string, string>): Request 
 
 describe("POST /api/orders", () => {
   it("rejects non-JSON requests with 415 before consuming an attempt", async () => {
-    const { createPostHandler } = await import("./route");
+    const { createPostHandler } = await import("./handler");
     const attempt = vi.fn(() => true);
     const handler = createPostHandler({
       submitOrder: vi.fn(),
@@ -48,7 +48,7 @@ describe("POST /api/orders", () => {
   });
 
   it("rejects request bodies over 32 KB with 413", async () => {
-    const { createPostHandler } = await import("./route");
+    const { createPostHandler } = await import("./handler");
     const attempt = vi.fn(() => true);
     const handler = createPostHandler({
       submitOrder: vi.fn(),
@@ -69,7 +69,7 @@ describe("POST /api/orders", () => {
   });
 
   it("returns 400 for invalid checkout input before consuming an attempt", async () => {
-    const { createPostHandler } = await import("./route");
+    const { createPostHandler } = await import("./handler");
     const attempt = vi.fn(() => true);
     const handler = createPostHandler({
       submitOrder: vi.fn(),
@@ -85,7 +85,7 @@ describe("POST /api/orders", () => {
   });
 
   it("allows five attempts per ten minutes and throttles the sixth hashed client key", async () => {
-    const { createPostHandler } = await import("./route");
+    const { createPostHandler } = await import("./handler");
     const { createMemoryRateLimiter } = await import("../../../lib/orders/rate-limit");
     const attemptedKeys: string[] = [];
     const limiter = createMemoryRateLimiter({ now: () => 1_000 });
@@ -112,7 +112,7 @@ describe("POST /api/orders", () => {
   });
 
   it("returns a sanitized 503 when configuration or storage fails", async () => {
-    const { createPostHandler } = await import("./route");
+    const { createPostHandler } = await import("./handler");
     const handler = createPostHandler({
       submitOrder: async () => {
         throw new Error("SUPABASE_SECRET_KEY leaked provider diagnostic");
@@ -128,7 +128,7 @@ describe("POST /api/orders", () => {
   });
 
   it("returns 409 when the trusted server quote rejects a stale client quote", async () => {
-    const { createPostHandler } = await import("./route");
+    const { createPostHandler } = await import("./handler");
     const { InvalidOrderError } = await import("../../../lib/orders/service");
     const handler = createPostHandler({ submitOrder: async () => { throw new InvalidOrderError(); }, attempt: () => true, clientIpHeader: "x-test-client-ip" });
 
@@ -139,7 +139,7 @@ describe("POST /api/orders", () => {
   });
 
   it("returns 201 with only the public order number", async () => {
-    const { createPostHandler } = await import("./route");
+    const { createPostHandler } = await import("./handler");
     const handler = createPostHandler({
       submitOrder: async () => ({ orderNumber: "PG-ABC234" }),
       attempt: () => true,
@@ -154,7 +154,7 @@ describe("POST /api/orders", () => {
   });
 
   it("ignores caller-controlled forwarding headers when the trusted header is absent", async () => {
-    const { createPostHandler } = await import("./route");
+    const { createPostHandler } = await import("./handler");
     const { createMemoryRateLimiter } = await import("../../../lib/orders/rate-limit");
     const limiter = createMemoryRateLimiter({ now: () => 1_000 });
     const handler = createPostHandler({
@@ -179,7 +179,7 @@ describe("POST /api/orders", () => {
   });
 
   it("uses a configured header only when it contains one valid IP token", async () => {
-    const { createPostHandler } = await import("./route");
+    const { createPostHandler } = await import("./handler");
     const attemptedKeys: string[] = [];
     const handler = createPostHandler({
       submitOrder: async () => ({ orderNumber: "PG-ABC234" }),

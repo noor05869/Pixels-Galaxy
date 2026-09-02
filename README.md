@@ -1,6 +1,6 @@
 # Pixels Galaxy storefront
 
-Pixels Galaxy is a Next.js storefront for ZipString products in Pakistan. It includes a Cash on Delivery checkout, server-authoritative PKR pricing, Supabase order storage, Resend order notifications, a protected single-admin order dashboard, and product-specific WhatsApp ordering.
+Pixels Galaxy is a Next.js storefront for Ku string in Pakistan. It includes a Cash on Delivery checkout, server-authoritative PKR pricing, Supabase order storage, Resend order notifications, a protected single-admin order dashboard, and product-specific WhatsApp ordering.
 
 ## Local development
 

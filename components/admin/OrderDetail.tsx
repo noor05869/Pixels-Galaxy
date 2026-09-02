@@ -37,10 +37,11 @@ export function OrderDetail({ order }: OrderDetailProps) {
           </div>
           <ul className="admin-line-items">
             {order.items.map((item) => (
-              <li key={`${item.productId}-${item.bundleId}`}>
+              <li key={`${item.productId}-${item.bundleId}-${item.colors?.join("-") ?? ""}`}>
                 <div>
                   <strong>{item.productName}</strong>
                   <span>{item.bundleLabel}</span>
+                  {item.colors ? <span>Colours: {item.colors.join(" + ")}</span> : null}
                   <span>Quantity {item.quantity}</span>
                 </div>
                 <dl>

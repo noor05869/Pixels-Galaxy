@@ -25,23 +25,25 @@ describe("storefront WhatsApp actions", () => {
 
     expect(link.origin + link.pathname).toBe("https://wa.me/923324468116");
     expect(link.searchParams.get("text")).toBe(
-      "Hi Pixels Galaxy! I want to order ZipString Original. Bundle: 1 ZIPSTRING. Quantity: 1. Total: Rs 8,999.",
+      "Hi Pixels Galaxy! I want to order Ku string. Bundle: PICK ANY 2 COLOURS (Blue + Pink). Quantity: 2. Total: Rs 3,500.",
     );
-    expect(markup).toContain('aria-label="Buy ZipString Original on WhatsApp"');
+    expect(markup).toContain('aria-label="Buy Ku string on WhatsApp"');
     expect(markup).toContain('target="_blank"');
     expect(markup).toContain('rel="noopener noreferrer"');
     expect(markup).toContain("ADD TO CART");
+    expect(markup).toContain("First Ku String");
+    expect(markup).toContain("Second Ku String");
   });
 
   it("offers a product card's default trusted price without replacing its action", () => {
-    const product = products.find((candidate) => candidate.id === "zipstring-glow")!;
+    const product = products.find((candidate) => candidate.id === "ku-string")!;
     const markup = renderWithCart(createElement(ProductCard, { product }));
     const link = readOnlyLink(markup);
 
     expect(link.searchParams.get("text")).toBe(
-      "Hi Pixels Galaxy! I want to order ZipString Glow. Bundle: Standard. Quantity: 1. Total: Rs 6,999.",
+      "Hi Pixels Galaxy! I want to order Ku string. Bundle: BLUE. Quantity: 1. Total: Rs 1,999.",
     );
-    expect(markup).toContain('aria-label="Buy ZipString Glow on WhatsApp"');
-    expect(markup).toContain("ADD TO CART");
+    expect(markup).toContain('aria-label="Buy Ku string on WhatsApp"');
+    expect(markup).toContain("VIEW KU STRING");
   });
 });

@@ -13,9 +13,9 @@ const checkout = {
   address: "12 Example Street",
   notes: "Please call first",
   consent: true,
-  expectedTotal: 899900,
+  expectedTotal: 199900,
   catalogueRevision: CATALOGUE_REVISION,
-  items: [{ productId: "zipstring-original", bundleId: "one", quantity: 1 }],
+  items: [{ productId: "ku-string", bundleId: "blue", quantity: 1 }],
 };
 
 function storedOrder(order: NewOrder): StoredOrder {
@@ -82,17 +82,17 @@ describe("createOrderService", () => {
     expect(savedOrder).toMatchObject({
       orderNumber: "PG-ABC234",
       customerName: "Ayesha Khan",
-      total: 899_900,
+      total: 199_900,
       paymentMethod: "cod",
       currency: "PKR",
       status: "new",
       notificationState: "failed",
       items: [
         expect.objectContaining({
-          productId: "zipstring-original",
-          productName: "ZipString Original",
-          unitPrice: 899_900,
-          lineTotal: 899_900,
+          productId: "ku-string",
+          productName: "Ku string",
+          unitPrice: 199_900,
+          lineTotal: 199_900,
         }),
       ],
     });

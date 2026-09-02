@@ -5,7 +5,7 @@ export const orderStatuses = ["new", "confirmed", "shipped", "completed", "cance
 
 export type OrderStatus = (typeof orderStatuses)[number];
 
-export type CheckoutCartItem = Pick<CartLine, "productId" | "bundleId" | "quantity">;
+export type CheckoutCartItem = Pick<CartLine, "productId" | "bundleId" | "quantity" | "colors">;
 
 export type CheckoutInput = {
   customerName: string;
@@ -29,6 +29,7 @@ export type TrustedOrderItem = {
   quantity: number;
   unitPrice: number;
   lineTotal: number;
+  colors?: CartLine["colors"];
 };
 
 export type NotificationState = "sent" | "failed";

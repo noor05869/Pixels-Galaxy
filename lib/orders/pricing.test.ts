@@ -4,53 +4,62 @@ import { priceOrder } from "./pricing";
 
 describe("priceOrder", () => {
   it("uses the server catalogue price for an exact bundle", () => {
-    expect(priceOrder([{ productId: "zipstring-original", bundleId: "one", quantity: 2 }])).toEqual({
+    expect(priceOrder([{ productId: "ku-string", bundleId: "blue", quantity: 2 }])).toEqual({
       items: [
         {
-          productId: "zipstring-original",
-          productName: "ZipString Original",
-          bundleId: "one",
-          bundleLabel: "1 ZIPSTRING",
+          productId: "ku-string",
+          productName: "Ku string",
+          bundleId: "blue",
+          bundleLabel: "BLUE",
           quantity: 2,
-          unitPrice: 899900,
-          lineTotal: 1799800,
+          unitPrice: 199900,
+          lineTotal: 399800,
         },
       ],
-      total: 1799800,
+      total: 399800,
     });
   });
 
-  it.each([
-    { bundleId: "two", quantity: 1 },
-    { bundleId: "two", quantity: 3 },
-    { bundleId: "four", quantity: 2 },
-    { bundleId: "four", quantity: 5 },
-  ])("rejects quantity $quantity that is incompatible with bundle $bundleId", ({ bundleId, quantity }) => {
-    expect(() => priceOrder([{ productId: "zipstring-original", bundleId, quantity }]))
-      .toThrow("Cart item is unavailable");
+  it("keeps trusted colour choices for a two-piece bundle", () => {
+    expect(priceOrder([{ productId: "ku-string", bundleId: "pick-any-two", quantity: 2, colors: ["blue", "blue"] }])).toEqual({
+      items: [expect.objectContaining({
+        bundleId: "pick-any-two",
+        colors: ["blue", "blue"],
+        lineTotal: 350000,
+      })],
+      total: 350000,
+    });
   });
 
-  it("uses the base price only with the card bundle for products without bundles", () => {
-    expect(priceOrder([{ productId: "zipstring-glow", bundleId: "card", quantity: 2 }]).total).toBe(1399800);
+  it("rejects a two-piece bundle without exactly two valid colour choices", () => {
+    expect(() => priceOrder([{ productId: "ku-string", bundleId: "pick-any-two", quantity: 2 }]))
+      .toThrow("Choose two colours");
+  });
+
+  it.each([
+    { bundleId: "blue", quantity: 0 },
+  ])("rejects quantity $quantity that is incompatible with bundle $bundleId", ({ bundleId, quantity }) => {
+    expect(() => priceOrder([{ productId: "ku-string", bundleId, quantity }]))
+      .toThrow("Cart item is unavailable");
   });
 
   it.each([
     { items: [{ productId: "unknown", bundleId: "one", quantity: 1 }] },
-    { items: [{ productId: "zipstring-original", bundleId: "fake", quantity: 1 }] },
-    { items: [{ productId: "zipstring-glow", bundleId: "one", quantity: 1 }] },
+    { items: [{ productId: "ku-string", bundleId: "fake", quantity: 1 }] },
+    { items: [{ productId: "ku-string", bundleId: "card", quantity: 1 }] },
   ])("rejects an unavailable cart item", ({ items }) => {
     expect(() => priceOrder(items)).toThrow("Cart item is unavailable");
   });
 
   it("rejects duplicate product and bundle lines", () => {
-    const item = { productId: "zipstring-original", bundleId: "one", quantity: 1 };
+    const item = { productId: "ku-string", bundleId: "blue", quantity: 1 };
 
     expect(() => priceOrder([item, item])).toThrow("Duplicate cart item");
   });
 
   it("rejects totals outside the safe integer range", () => {
     expect(() =>
-      priceOrder([{ productId: "zipstring-original", bundleId: "one", quantity: Number.MAX_SAFE_INTEGER }]),
+      priceOrder([{ productId: "ku-string", bundleId: "blue", quantity: Number.MAX_SAFE_INTEGER }]),
     ).toThrow("Order total is invalid");
   });
 });

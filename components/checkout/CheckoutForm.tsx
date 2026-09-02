@@ -151,7 +151,7 @@ export function CheckoutForm() {
         <h1 id="checkout-success-title">Order {orderNumber} confirmed</h1>
         <p>Your Cash on Delivery order is in. Pay the courier when your parcel arrives.</p>
         <p>Questions? Email <a href="mailto:hello@pixelsgalaxy.com">hello@pixelsgalaxy.com</a>.</p>
-        <Link href="/#shop" className="checkout-primary-action">Return to store</Link>
+        <Link href="/#featured" className="checkout-primary-action">Return to store</Link>
       </section>
     );
   }
@@ -171,8 +171,8 @@ export function CheckoutForm() {
       <section className="checkout-state" aria-labelledby="empty-cart-title">
         <p className="checkout-kicker">YOUR ORDER</p>
         <h1 id="empty-cart-title">Your cart is empty</h1>
-        <p>Choose a ZipString before starting checkout.</p>
-        <Link href="/#shop" className="checkout-primary-action">Shop ZipString</Link>
+        <p>Choose a Ku string colour before starting checkout.</p>
+        <Link href="/#featured" className="checkout-primary-action">Shop Ku string</Link>
       </section>
     );
   }

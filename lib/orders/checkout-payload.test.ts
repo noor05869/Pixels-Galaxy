@@ -13,6 +13,7 @@ describe("toCheckoutPayload", () => {
       name: "ZipString Pro Double Pack",
       image: "/products/zipstring-pro.jpg",
       unitPrice: 1299900,
+      colors: ["blue", "pink"],
     };
 
     expect(createCheckoutPayload([line])).toEqual({
@@ -20,6 +21,7 @@ describe("toCheckoutPayload", () => {
         productId: line.productId,
         bundleId: line.bundleId,
         quantity: line.quantity,
+        colors: ["blue", "pink"],
       }],
       expectedTotal: 2599800,
       catalogueRevision: CATALOGUE_REVISION,

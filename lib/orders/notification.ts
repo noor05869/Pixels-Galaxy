@@ -33,7 +33,7 @@ function formatPkr(amount: number): string {
 function buildText(order: StoredOrder, dashboardUrl: string): string {
   const itemLines = order.items.map(
     (item) =>
-      `${item.productName} — ${item.bundleLabel} — ${item.quantity} × ${formatPkr(item.unitPrice)} = ${formatPkr(item.lineTotal)}`,
+      `${item.productName} — ${item.bundleLabel}${item.colors ? ` (${item.colors.join(" + ")})` : ""} — ${item.quantity} × ${formatPkr(item.unitPrice)} = ${formatPkr(item.lineTotal)}`,
   );
 
   return [
@@ -61,7 +61,7 @@ function buildHtml(order: StoredOrder, dashboardUrl: string): string {
     .map(
       (item) => `<tr>
         <td>${escapeHtml(item.productName)}</td>
-        <td>${escapeHtml(item.bundleLabel)}</td>
+        <td>${escapeHtml(item.bundleLabel)}${item.colors ? ` (${escapeHtml(item.colors.join(" + "))})` : ""}</td>
         <td>${item.quantity}</td>
         <td>${escapeHtml(formatPkr(item.unitPrice))}</td>
         <td>${escapeHtml(formatPkr(item.lineTotal))}</td>

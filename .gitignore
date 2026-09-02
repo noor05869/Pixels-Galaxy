@@ -5,3 +5,5 @@ out/
 !.env.example
 npm-debug.log*
 tsconfig.tsbuildinfo
+.superpowers/
+.tmp/

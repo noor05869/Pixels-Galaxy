@@ -13,7 +13,7 @@ export function OrderSummary({ lines }: { lines: CartLine[] }) {
       <h2 id="order-summary-title">Order summary</h2>
       <div className="checkout-summary-lines">
         {lines.map((line) => (
-          <article className="checkout-summary-line" key={`${line.productId}-${line.bundleId}`}>
+          <article className="checkout-summary-line" key={`${line.productId}-${line.bundleId}-${line.colors?.join("-") ?? ""}`}>
             <div className="checkout-summary-image">
               <Image src={line.image} alt="" width={80} height={80} />
               <span aria-label={`Quantity ${line.quantity}`}>{line.quantity}</span>
@@ -21,6 +21,7 @@ export function OrderSummary({ lines }: { lines: CartLine[] }) {
             <div>
               <strong>{line.name}</strong>
               <small>{products.find((product) => product.id === line.productId)?.bundles.find((bundle) => bundle.id === line.bundleId)?.label ?? line.bundleId.replaceAll("-", " ")}</small>
+              {line.colors ? <small>{line.colors.map((color) => color[0].toUpperCase() + color.slice(1)).join(" + ")}</small> : null}
             </div>
             <Price amount={line.unitPrice * line.quantity} />
           </article>
