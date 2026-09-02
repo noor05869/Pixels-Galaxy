@@ -274,6 +274,8 @@ footer{color:var(--logo-cyan)}
 .footer-main h3,.footer-brand p,.newsletter label{color:var(--logo-cyan)}
 .newsletter button{background:var(--logo-cyan);color:#0d1118}
 .footer-bottom{border-top-color:#35424c}
+.footer-searches{display:block;padding:0 45px 18px;color:#80909a;font-size:11px;line-height:1.6;text-align:center}
+.footer-searches:hover,.footer-searches:focus-visible{color:var(--logo-cyan)}
 
 @media(min-width:901px){.featured-gallery-wrap{position:sticky;top:24px;align-self:start}}
 

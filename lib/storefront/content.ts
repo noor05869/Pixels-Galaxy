@@ -6,6 +6,7 @@ const media = (id: string, src: string, alt: string, accent: string, aspectRatio
 
 export const siteContent = {
   announcement: "PICK ANY 2 FOR PKR 3,500 — FREE DELIVERY ACROSS PAKISTAN",
+  footerSearchText: "Looking for a string toy in Pakistan? Compare the string toy price in Pakistan for Ku String, explore rechargeable flying string toys, and see an option for shoppers searching for a ZipString-style toy in Pakistan.",
   hero: {
     eyebrow: "KU STRING • NOW IN PAKISTAN",
     title: "STRING SHOOTER TOY",
