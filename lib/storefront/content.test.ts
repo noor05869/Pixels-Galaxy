@@ -31,6 +31,24 @@ describe("authoritative Ku string catalogue", () => {
     ]);
   });
 
+  it("answers the questions Pakistan shoppers need before ordering", () => {
+    expect(siteContent).toMatchObject({
+      seo: {
+        heading: "Buy a String Shooter Toy in Pakistan",
+        features: expect.arrayContaining([
+          expect.objectContaining({ title: "Glow-in-the-dark flying string" }),
+          expect.objectContaining({ title: "Cash on Delivery in Pakistan" }),
+        ]),
+        faqs: expect.arrayContaining([
+          expect.objectContaining({ question: "What is a string shooter toy?" }),
+          expect.objectContaining({ question: "How much is Ku String in Pakistan?" }),
+          expect.objectContaining({ question: "Where does Pixels Galaxy deliver?" }),
+        ]),
+      },
+    });
+    expect(featuredProduct.description).toContain("glow-in-the-dark string shooter");
+  });
+
   it("opens the product gallery with its demo video and retains the complete local photo set", () => {
     expect(featuredProduct.media.map(({ type, src, poster }) => ({ type, src, poster }))).toEqual([
       { type: "video", src: "/videos/v1.mp4", poster: "/photos/p-1.webp" },

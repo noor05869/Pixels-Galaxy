@@ -1,13 +1,11 @@
 import type { MetadataRoute } from "next";
+import { siteUrl } from "@/lib/seo/jsonLd";
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
-
   // Checkout, admin, order-detail, and API routes are intentionally private.
   return [
     {
-      url: new URL("/", siteUrl).toString(),
-      lastModified: new Date(),
+      url: `${siteUrl}/`,
       changeFrequency: "weekly",
       priority: 1,
     },

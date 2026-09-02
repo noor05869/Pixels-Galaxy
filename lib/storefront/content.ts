@@ -7,8 +7,8 @@ const media = (id: string, src: string, alt: string, accent: string, aspectRatio
 export const siteContent = {
   announcement: "PICK ANY 2 FOR PKR 3,500 — FREE DELIVERY ACROSS PAKISTAN",
   hero: {
-    eyebrow: "MORE MAGIC, TOGETHER",
-    title: "PICK ANY 2",
+    eyebrow: "KU STRING • NOW IN PAKISTAN",
+    title: "STRING SHOOTER TOY",
     cta: "CHOOSE YOUR COLOURS",
     note: "Mix blue, green, or pink • Cash on Delivery",
     media: media("hero", "https://images.unsplash.com/photo-1594736797933-d0501ba2fe65?auto=format&fit=crop&w=1800&q=85", "Colorful light trails in a dark creative space", "#05183d", "16 / 9"),
@@ -20,6 +20,26 @@ export const siteContent = {
     media("social-3", "https://images.unsplash.com/photo-1493711662062-fa541adb3fc8?auto=format&fit=crop&w=900&q=80", "Friends gaming together", "#22d6ee"),
     media("social-4", "https://images.unsplash.com/photo-1612287230202-1ff1d85d1bdf?auto=format&fit=crop&w=900&q=80", "Neon game controller", "#7aff4f"),
   ],
+  seo: {
+    eyebrow: "FLYING STRING FUN",
+    heading: "Buy a String Shooter Toy in Pakistan",
+    introduction: "Ku String is a handheld flying string toy that sends a soft loop through the air for waves, circles, and tricks. Order online from Pixels Galaxy in blue, green, or pink, with Cash on Delivery available across Pakistan.",
+    features: [
+      { title: "Glow-in-the-dark flying string", text: "Create bright loops and moving patterns during indoor or low-light play." },
+      { title: "USB charging included", text: "The box includes the Ku String device, glowing string, USB cable, and guide." },
+      { title: "Three colour choices", text: "Choose blue, green, or pink, or mix any two colours in the bundle." },
+      { title: "Cash on Delivery in Pakistan", text: "Order online and pay when your parcel arrives anywhere in our Pakistan delivery coverage." },
+    ],
+    faqs: [
+      { question: "What is a string shooter toy?", answer: "A string shooter is a handheld toy that moves a continuous loop of string through the air. You guide the flying loop with your hand to make waves, circles, and other patterns." },
+      { question: "How much is Ku String in Pakistan?", answer: "One Ku String costs PKR 1,999. The Pick Any 2 bundle costs PKR 3,500 in total and includes free delivery across Pakistan." },
+      { question: "What comes in the Ku String box?", answer: "The package includes the Ku String launcher, glowing string, USB charging cable, and a guide." },
+      { question: "Which Ku String colours are available?", answer: "Ku String is available in blue, green, and pink. The two-piece bundle lets you select both colours separately." },
+      { question: "What age is Ku String for?", answer: "The product is marked for ages 3 and above. Adult supervision is recommended during play." },
+      { question: "Where does Pixels Galaxy deliver?", answer: "Pixels Galaxy delivers across Pakistan with Cash on Delivery. Major cities usually take 2 to 4 working days; other cities and towns usually take 3 to 6 working days." },
+      { question: "What if my order arrives damaged or incorrect?", answer: "Report a damaged, wrong, incomplete, or faulty item to Pixels Galaxy within 3 days of delivery so the issue can be reviewed." },
+    ],
+  },
 };
 
 export const trustMetrics: TrustMetric[] = [
@@ -38,7 +58,7 @@ const commonBenefits = [
 
 export const products: Product[] = [
   {
-    id: "ku-string", name: "Ku string", kicker: "ONLINE ONLY", description: "Ku string is a movement toy for ages 3+, available online in blue, green, and pink with delivery across Pakistan.", category: "Best Sellers", price: 199900, rating: 0, reviews: 0, badge: "IN STOCK", swatches: ["#2474ff", "#28b86f", "#ff4f9a"],
+    id: "ku-string", name: "Ku string", kicker: "ONLINE ONLY", description: "Ku string is a glow-in-the-dark string shooter and flying rope toy for ages 3+, available online in blue, green, and pink with Cash on Delivery across Pakistan.", category: "Best Sellers", price: 199900, rating: 0, reviews: 0, badge: "IN STOCK", swatches: ["#2474ff", "#28b86f", "#ff4f9a"],
     media: [
       { id: "ku-string-demo", type: "video", src: "/videos/v1.mp4", poster: "/photos/p-1.webp", alt: "Ku string toy demonstration video", accent: "#2474ff", aspectRatio: "1 / 1" },
       media("ku-string-hero", "/photos/p-1.webp", "Blue Ku string glow-in-the-dark rope launcher in action", "#2474ff"),
