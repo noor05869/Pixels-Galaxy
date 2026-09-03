@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 import type { CheckoutInput } from "./types";
+import { isProvinceCode } from "@/lib/locations/pakistan";
 
 const requiredText = (maxLength: number) => z.string().trim().min(1).max(maxLength);
 
@@ -13,6 +14,10 @@ const checkoutSchema = z.object({
   email: optionalText(254).pipe(z.string().email().optional()),
   city: requiredText(100),
   address: requiredText(500),
+  province: z.string().trim().refine(isProvinceCode),
+  postalCode: optionalText(10).pipe(z.string().regex(/^[A-Za-z0-9 -]{3,10}$/).optional()),
+  landmark: optionalText(200),
+  addressType: z.enum(["home", "office"]),
   notes: optionalText(1000),
   consent: z.literal(true),
   website: z.string().trim().max(0).transform(() => undefined).optional(),

@@ -5,6 +5,7 @@ import {
   notificationLabel,
 } from "./orderPresentation";
 import { OrderStatusForm } from "./OrderStatusForm";
+import { provinceNameForCode } from "../../lib/locations/pakistan";
 
 type OrderDetailProps = {
   order: StoredOrder;
@@ -24,7 +25,11 @@ export function OrderDetail({ order }: OrderDetailProps) {
             <div><dt>Phone</dt><dd><a href={`tel:${order.phone}`}>{order.phone}</a></dd></div>
             {order.email ? <div><dt>Email</dt><dd><a href={`mailto:${order.email}`}>{order.email}</a></dd></div> : null}
             <div><dt>City</dt><dd>{order.city}</dd></div>
+            {order.province ? <div><dt>Province / territory</dt><dd>{provinceNameForCode(order.province)}</dd></div> : null}
+            {order.postalCode ? <div><dt>Postal code</dt><dd>{order.postalCode}</dd></div> : null}
             <div><dt>Address</dt><dd><address>{order.address}</address></dd></div>
+            {order.landmark ? <div><dt>Landmark</dt><dd>{order.landmark}</dd></div> : null}
+            {order.addressType ? <div><dt>Address type</dt><dd>{order.addressType === "home" ? "Home" : "Office"}</dd></div> : null}
             {order.notes ? <div className="admin-detail-wide"><dt>Order notes</dt><dd>{order.notes}</dd></div> : null}
           </dl>
         </section>

@@ -8,14 +8,21 @@ import { useCart } from "@/components/cart/CartProvider";
 import { createCheckoutPayload } from "@/lib/orders/checkout-payload";
 import { validateCheckoutFields } from "@/lib/orders/checkout-validation";
 import type { CheckoutErrors, CheckoutFieldName, CheckoutFormValues } from "@/lib/orders/checkout-validation";
+import { citiesForProvince, pakistanProvinces, type ProvinceCode } from "@/lib/locations/pakistan";
+import { paymentOptions } from "./checkout-options";
 import { OrderSummary } from "./OrderSummary";
 
 const initialFields: CheckoutFormValues = {
   customerName: "",
   phone: "",
   email: "",
+  province: "",
   city: "",
+  otherCity: "",
   address: "",
+  postalCode: "",
+  landmark: "",
+  addressType: "home",
   notes: "",
   consent: false,
   website: "",
@@ -25,8 +32,13 @@ const fieldDetails: Record<CheckoutFieldName, { id: string; label: string }> = {
   customerName: { id: "customer-name", label: "Full name" },
   phone: { id: "phone", label: "Pakistani phone number" },
   email: { id: "email", label: "Email" },
+  province: { id: "province", label: "Province / territory" },
   city: { id: "city", label: "City" },
-  address: { id: "address", label: "Delivery address" },
+  otherCity: { id: "other-city", label: "Other city" },
+  address: { id: "address", label: "Street address" },
+  postalCode: { id: "postal-code", label: "Postal code" },
+  landmark: { id: "landmark", label: "Landmark" },
+  addressType: { id: "address-type-home", label: "Address type" },
   notes: { id: "notes", label: "Order notes" },
   consent: { id: "consent", label: "Consent" },
 };
@@ -101,8 +113,12 @@ export function CheckoutForm() {
           customerName: fields.customerName.trim(),
           phone: fields.phone.trim(),
           email: fields.email.trim() || undefined,
-          city: fields.city.trim(),
+          province: fields.province,
+          city: (fields.city === "Other city" ? fields.otherCity : fields.city).trim(),
           address: fields.address.trim(),
+          postalCode: fields.postalCode.trim() || undefined,
+          landmark: fields.landmark.trim() || undefined,
+          addressType: fields.addressType,
           notes: fields.notes.trim() || undefined,
           consent: fields.consent,
           website: fields.website,
@@ -143,15 +159,31 @@ export function CheckoutForm() {
 
   const validationErrors = fieldOrder.filter((field) => fieldErrors[field]);
   const hasErrors = validationErrors.length > 0 || Boolean(submissionError);
+  const cityOptions = fields.province ? citiesForProvince(fields.province) : [];
 
   if (orderNumber) {
     return (
       <section className="checkout-state checkout-success" aria-labelledby="checkout-success-title" aria-live="polite" role="status" tabIndex={-1} ref={successRef}>
-        <p className="checkout-kicker">THANK YOU</p>
-        <h1 id="checkout-success-title">Order {orderNumber} confirmed</h1>
-        <p>Your Cash on Delivery order is in. Pay the courier when your parcel arrives.</p>
-        <p>Questions? Email <a href="mailto:support@pixelsgalaxy.com">support@pixelsgalaxy.com</a>.</p>
-        <Link href="/#featured" className="checkout-primary-action">Return to store</Link>
+        <div className="checkout-success-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none"><path d="m6.5 12.5 3.5 3.5 7.5-8" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
+        </div>
+        <p className="checkout-kicker">THANK YOU FOR YOUR ORDER</p>
+        <h1 id="checkout-success-title">Order confirmed</h1>
+        <div className="checkout-order-number">
+          <span>Order number</span>
+          <strong>{orderNumber}</strong>
+        </div>
+        <div className="checkout-success-payment"><span aria-hidden="true">●</span> Cash on Delivery</div>
+        <p className="checkout-success-lead">We’ve received your order and will prepare it for delivery.</p>
+        <ol className="checkout-next-steps" aria-label="What happens next">
+          <li><span>1</span><div><strong>Order received</strong><small>Your details have been saved securely.</small></div></li>
+          <li><span>2</span><div><strong>We prepare your parcel</strong><small>Our team may contact you to confirm delivery.</small></div></li>
+          <li><span>3</span><div><strong>Pay on delivery</strong><small>Pay the courier when your parcel arrives.</small></div></li>
+        </ol>
+        <div className="checkout-success-actions">
+          <Link href="/#featured" className="checkout-primary-action">Continue shopping</Link>
+          <a href="mailto:support@pixelsgalaxy.com" className="checkout-support-link">Need help? Contact support</a>
+        </div>
       </section>
     );
   }
@@ -189,7 +221,7 @@ export function CheckoutForm() {
           <div className="checkout-form-heading">
             <span>01</span>
             <div>
-              <h2>Delivery details</h2>
+              <h2>Delivery address</h2>
               <p>Fields marked with * are required.</p>
             </div>
           </div>
@@ -237,16 +269,61 @@ export function CheckoutForm() {
           </div>
 
           <div className="checkout-field checkout-field-wide">
-            <label htmlFor="city">City *</label>
-            <input id="city" name="city" autoComplete="address-level2" required maxLength={100} aria-invalid={fieldErrors.city ? true : undefined} aria-describedby={fieldErrors.city ? "city-error" : undefined} value={fields.city} onChange={(event) => updateField("city", event.target.value)} />
-            {fieldErrors.city ? <span className="checkout-field-error" id="city-error">{fieldErrors.city}</span> : null}
+            <label htmlFor="address">Street address *</label>
+            <input id="address" name="address" autoComplete="street-address" required maxLength={500} placeholder="e.g. House 12, Street 5, Block A" aria-invalid={fieldErrors.address ? true : undefined} aria-describedby={fieldErrors.address ? "address-error" : undefined} value={fields.address} onChange={(event) => updateField("address", event.target.value)} />
+            {fieldErrors.address ? <span className="checkout-field-error" id="address-error">{fieldErrors.address}</span> : null}
           </div>
 
           <div className="checkout-field checkout-field-wide">
-            <label htmlFor="address">Delivery address *</label>
-            <textarea id="address" name="address" autoComplete="street-address" required maxLength={500} rows={4} aria-invalid={fieldErrors.address ? true : undefined} aria-describedby={fieldErrors.address ? "address-error" : undefined} value={fields.address} onChange={(event) => updateField("address", event.target.value)} />
-            {fieldErrors.address ? <span className="checkout-field-error" id="address-error">{fieldErrors.address}</span> : null}
+            <label htmlFor="province">Province / territory *</label>
+            <select id="province" name="province" autoComplete="address-level1" required aria-invalid={fieldErrors.province ? true : undefined} aria-describedby={fieldErrors.province ? "province-error" : undefined} value={fields.province} onChange={(event) => {
+              const province = event.target.value as ProvinceCode | "";
+              setFields((current) => ({ ...current, province, city: "", otherCity: "" }));
+              setFieldErrors((current) => ({ ...current, province: undefined, city: undefined, otherCity: undefined }));
+            }}>
+              <option value="">Select province or territory</option>
+              {pakistanProvinces.map((province) => <option key={province.code} value={province.code}>{province.name}</option>)}
+            </select>
+            {fieldErrors.province ? <span className="checkout-field-error" id="province-error">{fieldErrors.province}</span> : null}
           </div>
+
+          <div className="checkout-field">
+            <label htmlFor="city">City *</label>
+            <select id="city" name="city" autoComplete="address-level2" required disabled={!fields.province} aria-invalid={fieldErrors.city ? true : undefined} aria-describedby={fieldErrors.city ? "city-error" : undefined} value={fields.city} onChange={(event) => updateField("city", event.target.value)}>
+              <option value="">{fields.province ? "Select city" : "Select province first"}</option>
+              {cityOptions.map((city) => <option key={city} value={city}>{city}</option>)}
+            </select>
+            {fieldErrors.city ? <span className="checkout-field-error" id="city-error">{fieldErrors.city}</span> : null}
+          </div>
+
+          <div className="checkout-field">
+            <label htmlFor="postal-code">Postal code <span>(optional)</span></label>
+            <input id="postal-code" name="postalCode" inputMode="numeric" autoComplete="postal-code" maxLength={10} placeholder="e.g. 75500" aria-invalid={fieldErrors.postalCode ? true : undefined} aria-describedby={fieldErrors.postalCode ? "postal-code-error" : undefined} value={fields.postalCode} onChange={(event) => updateField("postalCode", event.target.value)} />
+            {fieldErrors.postalCode ? <span className="checkout-field-error" id="postal-code-error">{fieldErrors.postalCode}</span> : null}
+          </div>
+
+          {fields.city === "Other city" ? <div className="checkout-field checkout-field-wide">
+            <label htmlFor="other-city">Enter city *</label>
+            <input id="other-city" name="otherCity" maxLength={100} required aria-invalid={fieldErrors.otherCity ? true : undefined} aria-describedby={fieldErrors.otherCity ? "other-city-error" : undefined} value={fields.otherCity} onChange={(event) => updateField("otherCity", event.target.value)} />
+            {fieldErrors.otherCity ? <span className="checkout-field-error" id="other-city-error">{fieldErrors.otherCity}</span> : null}
+          </div> : null}
+
+          <div className="checkout-field checkout-field-wide">
+            <label htmlFor="landmark">Landmark <span>(optional)</span></label>
+            <input id="landmark" name="landmark" maxLength={200} placeholder="e.g. Near City Hospital" aria-invalid={fieldErrors.landmark ? true : undefined} aria-describedby={fieldErrors.landmark ? "landmark-error" : undefined} value={fields.landmark} onChange={(event) => updateField("landmark", event.target.value)} />
+            {fieldErrors.landmark ? <span className="checkout-field-error" id="landmark-error">{fieldErrors.landmark}</span> : null}
+          </div>
+
+          <fieldset className="checkout-address-type checkout-field-wide">
+            <legend>Address type *</legend>
+            <div>
+              {(["home", "office"] as const).map((type) => <label key={type} className={fields.addressType === type ? "is-selected" : ""}>
+                <input id={`address-type-${type}`} type="radio" name="addressType" value={type} checked={fields.addressType === type} onChange={() => updateField("addressType", type)} />
+                <span>{type === "home" ? "Home" : "Office"}</span>
+              </label>)}
+            </div>
+            {fieldErrors.addressType ? <span className="checkout-field-error">{fieldErrors.addressType}</span> : null}
+          </fieldset>
 
           <div className="checkout-field checkout-field-wide">
             <label htmlFor="notes">Order notes <span>(optional)</span></label>
@@ -266,6 +343,20 @@ export function CheckoutForm() {
             </label>
             {fieldErrors.consent ? <span className="checkout-field-error" id="consent-error">{fieldErrors.consent}</span> : null}
           </div>
+
+          <section className="checkout-payment checkout-field-wide" aria-labelledby="payment-heading">
+            <div className="checkout-form-heading">
+              <span>02</span>
+              <div><h2 id="payment-heading">Payment method</h2><p>Choose how you want to pay.</p></div>
+            </div>
+            <div className="checkout-payment-options">
+              {paymentOptions.map((option) => <label key={option.id} className={`${option.id === "cod" ? "is-selected" : ""}${option.disabled ? " is-disabled" : ""}`}>
+                <input type="radio" name="paymentMethod" checked={option.id === "cod"} disabled={option.disabled} readOnly />
+                <span>{option.label}</span>
+                {option.disabled ? <small>Coming soon</small> : null}
+              </label>)}
+            </div>
+          </section>
 
           <button className="checkout-submit" type="submit" disabled={submitting}>
             {submitting ? "PLACING ORDER…" : "PLACE CASH ON DELIVERY ORDER"}

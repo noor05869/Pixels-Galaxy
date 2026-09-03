@@ -3,6 +3,7 @@ import "server-only";
 import { Resend } from "resend";
 
 import { getNotificationConfig } from "../config/server";
+import { provinceNameForCode } from "../locations/pakistan";
 
 import type { StoredOrder } from "./types";
 
@@ -44,7 +45,11 @@ function buildText(order: StoredOrder, dashboardUrl: string): string {
     `Phone: ${order.phone}`,
     `Email: ${order.email ?? "Not provided"}`,
     `City: ${order.city}`,
+    ...(order.province ? [`Province / territory: ${provinceNameForCode(order.province)}`] : []),
+    ...(order.postalCode ? [`Postal code: ${order.postalCode}`] : []),
     `Address: ${order.address}`,
+    ...(order.landmark ? [`Landmark: ${order.landmark}`] : []),
+    ...(order.addressType ? [`Address type: ${order.addressType === "home" ? "Home" : "Office"}`] : []),
     `Notes: ${order.notes ?? "None"}`,
     "",
     "Items:",
@@ -76,7 +81,11 @@ function buildHtml(order: StoredOrder, dashboardUrl: string): string {
       <dt>Phone</dt><dd>${escapeHtml(order.phone)}</dd>
       <dt>Email</dt><dd>${escapeHtml(order.email ?? "Not provided")}</dd>
       <dt>City</dt><dd>${escapeHtml(order.city)}</dd>
+      ${order.province ? `<dt>Province / territory</dt><dd>${escapeHtml(provinceNameForCode(order.province))}</dd>` : ""}
+      ${order.postalCode ? `<dt>Postal code</dt><dd>${escapeHtml(order.postalCode)}</dd>` : ""}
       <dt>Address</dt><dd>${escapeHtml(order.address)}</dd>
+      ${order.landmark ? `<dt>Landmark</dt><dd>${escapeHtml(order.landmark)}</dd>` : ""}
+      ${order.addressType ? `<dt>Address type</dt><dd>${order.addressType === "home" ? "Home" : "Office"}</dd>` : ""}
       <dt>Notes</dt><dd>${escapeHtml(order.notes ?? "None")}</dd>
     </dl>
     <table>

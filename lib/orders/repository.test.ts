@@ -10,6 +10,10 @@ type DatabaseOrder = {
   email: string | null;
   city: string;
   address: string;
+  province: "sindh" | null;
+  postal_code: string | null;
+  landmark: string | null;
+  address_type: "home" | "office" | null;
   notes: string | null;
   payment_method: "cod";
   currency: "PKR";
@@ -36,6 +40,8 @@ const newOrder = {
   phone: "03324468116",
   city: "Karachi",
   address: "12 Example Street",
+  province: "sindh" as const,
+  addressType: "home" as const,
   paymentMethod: "cod" as const,
   currency: "PKR" as const,
   total: 899900,
@@ -62,6 +68,10 @@ const databaseOrder: DatabaseOrder = {
   email: null,
   city: newOrder.city,
   address: newOrder.address,
+  province: newOrder.province,
+  postal_code: null,
+  landmark: null,
+  address_type: newOrder.addressType,
   notes: null,
   payment_method: newOrder.paymentMethod,
   currency: newOrder.currency,
@@ -123,6 +133,10 @@ describe("orders repository", () => {
       email: null,
       city: newOrder.city,
       address: newOrder.address,
+      province: newOrder.province,
+      postal_code: null,
+      landmark: null,
+      address_type: newOrder.addressType,
       notes: null,
       payment_method: "cod",
       currency: "PKR",

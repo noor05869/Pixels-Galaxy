@@ -3,6 +3,7 @@ import "server-only";
 import { createClient } from "@supabase/supabase-js";
 
 import { getSupabaseConfig } from "../config/server";
+import type { ProvinceCode } from "../locations/pakistan";
 
 import type { NewOrder, NotificationState, OrderStatus, StoredOrder, TrustedOrderItem } from "./types";
 
@@ -14,6 +15,10 @@ export type OrderRow = {
   email: string | null;
   city: string;
   address: string;
+  province: ProvinceCode | null;
+  postal_code: string | null;
+  landmark: string | null;
+  address_type: "home" | "office" | null;
   notes: string | null;
   payment_method: "cod";
   currency: "PKR";
@@ -82,6 +87,10 @@ function toOrderRow(order: NewOrder): NewOrderRow {
     email: order.email ?? null,
     city: order.city,
     address: order.address,
+    province: order.province,
+    postal_code: order.postalCode ?? null,
+    landmark: order.landmark ?? null,
+    address_type: order.addressType,
     notes: order.notes ?? null,
     payment_method: order.paymentMethod,
     currency: order.currency,
@@ -102,6 +111,10 @@ function toStoredOrder(row: OrderRow): StoredOrder {
     ...(row.email === null ? {} : { email: row.email }),
     city: row.city,
     address: row.address,
+    ...(row.province === null ? {} : { province: row.province }),
+    ...(row.postal_code === null ? {} : { postalCode: row.postal_code }),
+    ...(row.landmark === null ? {} : { landmark: row.landmark }),
+    ...(row.address_type === null ? {} : { addressType: row.address_type }),
     ...(row.notes === null ? {} : { notes: row.notes }),
     paymentMethod: row.payment_method,
     currency: row.currency,
