@@ -1,9 +1,16 @@
+import { isProvinceCode, type ProvinceCode } from "@/lib/locations/pakistan";
+
 export type CheckoutFormValues = {
   customerName: string;
   phone: string;
   email: string;
   city: string;
+  otherCity: string;
   address: string;
+  province: ProvinceCode | "";
+  postalCode: string;
+  landmark: string;
+  addressType: "home" | "office" | "";
   notes: string;
   consent: boolean;
   website: string;
@@ -21,7 +28,10 @@ export function validateCheckoutFields(fields: CheckoutFormValues): CheckoutErro
   const phone = fields.phone.trim();
   const email = fields.email.trim();
   const city = fields.city.trim();
+  const otherCity = fields.otherCity.trim();
   const address = fields.address.trim();
+  const postalCode = fields.postalCode.trim();
+  const landmark = fields.landmark.trim();
   const notes = fields.notes.trim();
 
   if (!customerName) errors.customerName = "Enter your full name.";
@@ -33,11 +43,22 @@ export function validateCheckoutFields(fields: CheckoutFormValues): CheckoutErro
   if (email.length > 254) errors.email = "Email must be 254 characters or fewer.";
   else if (email && !emailAddress.test(email)) errors.email = "Enter a valid email address or leave this field blank.";
 
-  if (!city) errors.city = "Enter your city.";
+  if (!isProvinceCode(fields.province)) errors.province = "Select your province or territory.";
+
+  if (!city) errors.city = "Select your city.";
   else if (city.length > 100) errors.city = "City must be 100 characters or fewer.";
+
+  if (city === "Other city") {
+    if (!otherCity) errors.otherCity = "Enter your city.";
+    else if (otherCity.length > 100) errors.otherCity = "City must be 100 characters or fewer.";
+  }
 
   if (!address) errors.address = "Enter your delivery address.";
   else if (address.length > 500) errors.address = "Delivery address must be 500 characters or fewer.";
+
+  if (postalCode && !/^[A-Za-z0-9 -]{3,10}$/.test(postalCode)) errors.postalCode = "Enter a valid postal code or leave it blank.";
+  if (landmark.length > 200) errors.landmark = "Landmark must be 200 characters or fewer.";
+  if (fields.addressType !== "home" && fields.addressType !== "office") errors.addressType = "Choose Home or Office.";
 
   if (notes.length > 1000) errors.notes = "Order notes must be 1,000 characters or fewer.";
   if (!fields.consent) errors.consent = "Confirm your delivery details before placing the order.";

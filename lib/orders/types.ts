@@ -1,5 +1,6 @@
 import type { CartLine } from "@/lib/cart/types";
 import type { BundleOffer, Product } from "@/lib/storefront/types";
+import type { ProvinceCode } from "@/lib/locations/pakistan";
 
 export const orderStatuses = ["new", "confirmed", "shipped", "completed", "cancelled"] as const;
 
@@ -13,6 +14,10 @@ export type CheckoutInput = {
   email?: string;
   city: string;
   address: string;
+  province: ProvinceCode;
+  postalCode?: string;
+  landmark?: string;
+  addressType: "home" | "office";
   notes?: string;
   consent: true;
   website?: string;
@@ -41,6 +46,10 @@ export type NewOrder = {
   email?: string;
   city: string;
   address: string;
+  province: ProvinceCode;
+  postalCode?: string;
+  landmark?: string;
+  addressType: "home" | "office";
   notes?: string;
   paymentMethod: "cod";
   currency: "PKR";
@@ -50,8 +59,10 @@ export type NewOrder = {
   notificationState: "failed";
 };
 
-export type StoredOrder = Omit<NewOrder, "status" | "notificationState"> & {
+export type StoredOrder = Omit<NewOrder, "status" | "notificationState" | "province" | "addressType"> & {
   id: string;
+  province?: ProvinceCode;
+  addressType?: "home" | "office";
   status: OrderStatus;
   notificationState: NotificationState;
   notificationFailure?: string;

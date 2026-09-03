@@ -6,8 +6,13 @@ const validFields = {
   customerName: "Ayesha Khan",
   phone: "03324468116",
   email: "ayesha@example.pk",
+  province: "punjab" as const,
   city: "Lahore",
+  otherCity: "",
   address: "12 Main Boulevard",
+  postalCode: "54000",
+  landmark: "",
+  addressType: "home" as const,
   notes: "Call on arrival",
   consent: true,
   website: "",
@@ -22,7 +27,7 @@ describe("validateCheckoutFields", () => {
       address: "  \n ",
     })).toEqual({
       customerName: "Enter your full name.",
-      city: "Enter your city.",
+      city: "Select your city.",
       address: "Enter your delivery address.",
     });
   });
