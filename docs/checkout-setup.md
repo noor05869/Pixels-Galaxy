@@ -174,7 +174,7 @@ As a final negative check, use a Supabase client configured only with the projec
 3. Wait until Resend marks the domain verified. A DMARC policy is also recommended; choose it with whoever manages mail for the parent domain.
 4. Create a restricted production API key and store it as `RESEND_API_KEY`.
 5. Set `ORDER_FROM_EMAIL` to a sender on the verified subdomain, for example `Pixels Galaxy Orders <orders@orders.example.pk>`.
-6. Set `ORDER_NOTIFICATION_EMAIL=hello@pixelsgalaxy.com`, or the approved private business inbox that should receive new-order messages.
+6. Set `ORDER_NOTIFICATION_EMAIL=support@pixelsgalaxy.com`, or the approved private business inbox that should receive new-order messages.
 
 The notification subject is `New COD Order — <order number>`. Delivery failure does not delete or reject a saved order; the dashboard records the notification as failed so it can be followed up manually.
 
@@ -207,7 +207,7 @@ Set all values in the deployment platform's production environment. Use `.env.lo
 | `SUPABASE_URL` | Server | Supabase project URL. |
 | `SUPABASE_SECRET_KEY` | Server secret | Secret/service-role-capable key used only by server code. |
 | `RESEND_API_KEY` | Server secret | Restricted API key for the verified Resend sending domain. |
-| `ORDER_NOTIFICATION_EMAIL` | Server | New-order recipient, currently `hello@pixelsgalaxy.com`. |
+| `ORDER_NOTIFICATION_EMAIL` | Server | New-order recipient, currently `support@pixelsgalaxy.com`. |
 | `ORDER_FROM_EMAIL` | Server | Display name and sender on the verified domain. |
 | `ORDER_CLIENT_IP_HEADER` | Server security boundary | Name of an edge-overwritten header containing exactly one validated client IP for `/api/orders`, for example `x-vercel-forwarded-for` when that is the platform's trusted single-IP contract. |
 | `ADMIN_CLIENT_IP_HEADER` | Server security boundary | Name of an edge-overwritten header containing exactly one validated client IP for `/api/admin/login`. It may match the order header only when the same trusted edge contract protects both routes. |
@@ -261,7 +261,7 @@ Use a unique synthetic note and synthetic delivery details—never a real custom
 3. Submit one valid COD order.
 4. Confirm the response shows a public number matching `PG-[A-Z0-9]{6}` and the cart clears only after the successful response.
 5. In Supabase, verify one corresponding row, the server-calculated integer-paisa total, and the immutable item snapshot fields: product, bundle, quantity, unit price, and line total.
-6. In `hello@pixelsgalaxy.com`, verify the subject, customer/delivery fields, itemized totals, and dashboard link. If email fails, verify the saved order remains and its notification state is `failed`.
+6. In `support@pixelsgalaxy.com`, verify the subject, customer/delivery fields, itemized totals, and dashboard link. If email fails, verify the saved order remains and its notification state is `failed`.
 7. Sign in at `/admin/login`, verify newest-first list and detail views, and change the test order status to `confirmed`.
 8. Log out, then verify `/admin/orders` redirects to login and protected admin APIs reject the old session.
 9. Open one `Buy on WhatsApp` action without sending it. Decode its URL and verify destination `923324468116` plus the visible product, bundle, quantity, and PKR total. Confirm it contains no name, phone, email, or address.

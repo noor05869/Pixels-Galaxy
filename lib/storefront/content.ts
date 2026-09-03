@@ -100,5 +100,5 @@ export const testimonials: Testimonial[] = [
 export const footerGroups: FooterGroup[] = [
   { title: "Shop", links: [{ label: "Ku string", href: "#featured" }, { label: "Choose a colour", href: "#featured" }, { label: "PKR 1,999", href: "#featured" }] },
   { title: "Product", links: [{ label: "Ages 3+", href: "#featured" }, { label: "Blue, green, pink", href: "#featured" }, { label: "Online only", href: "#featured" }] },
-  { title: "Help", links: [{ label: "Pakistan-wide delivery", href: "#policies" }, { label: "3-day issue reporting", href: "#policies" }, { label: "Contact Us", href: "mailto:hello@pixelsgalaxy.com" }] },
+  { title: "Help", links: [{ label: "Pakistan-wide delivery", href: "#policies" }, { label: "3-day issue reporting", href: "#policies" }, { label: "Contact Us", href: "mailto:support@pixelsgalaxy.com" }] },
 ];
