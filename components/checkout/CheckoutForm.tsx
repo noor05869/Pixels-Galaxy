@@ -121,7 +121,7 @@ export function CheckoutForm() {
         const message = response.status === 409
           ? "Your cart changed since this page loaded. Refresh the page, review the latest total, and try again."
           : result && typeof result === "object" && "error" in result && typeof result.error === "string" ? result.error
-          : "We could not place your order. Please try again.";
+            : "We could not place your order. Please try again.";
         setSubmissionError(message);
         setErrorFocusVersion((current) => current + 1);
         return;
@@ -150,7 +150,7 @@ export function CheckoutForm() {
         <p className="checkout-kicker">THANK YOU</p>
         <h1 id="checkout-success-title">Order {orderNumber} confirmed</h1>
         <p>Your Cash on Delivery order is in. Pay the courier when your parcel arrives.</p>
-        <p>Questions? Email <a href="mailto:hello@pixelsgalaxy.com">hello@pixelsgalaxy.com</a>.</p>
+        <p>Questions? Email <a href="mailto:support@pixelsgalaxy.com">support@pixelsgalaxy.com</a>.</p>
         <Link href="/#featured" className="checkout-primary-action">Return to store</Link>
       </section>
     );

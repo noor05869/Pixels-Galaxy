@@ -9,7 +9,7 @@ export const organizationJsonLd = {
   name: "Pixels Galaxy",
   url: siteUrl,
   logo: absoluteUrl("/brand/pixels-galaxy-logo.png"),
-  email: "hello@pixelsgalaxy.com",
+  email: "support@pixelsgalaxy.com",
   areaServed: { "@type": "Country", name: "Pakistan" },
 };
 

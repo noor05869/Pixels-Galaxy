@@ -64,7 +64,7 @@ NEXT_PUBLIC_WHATSAPP_NUMBER=923324468116
 SUPABASE_URL=https://project-ref.supabase.co
 SUPABASE_SECRET_KEY=sb_secret_replace_me
 RESEND_API_KEY=re_replace_me
-ORDER_NOTIFICATION_EMAIL=hello@pixelsgalaxy.com
+ORDER_NOTIFICATION_EMAIL=support@pixelsgalaxy.com
 ORDER_FROM_EMAIL=Pixels Galaxy Orders <orders@example.pk>
 ADMIN_PASSWORD_HASH=scrypt$replace_salt$replace_hash
 ADMIN_SESSION_SECRET=replace_with_at_least_32_random_bytes
@@ -602,7 +602,7 @@ With a test Supabase project and verified Resend domain:
 2. verify the returned `PG-XXXXXX` order number;
 3. verify the cart clears only after success;
 4. verify the Supabase row and immutable item snapshot;
-5. verify the email subject and contents at `hello@pixelsgalaxy.com`;
+5. verify the email subject and contents at `support@pixelsgalaxy.com`;
 6. log in to `/admin/login`;
 7. verify list/detail display and update status to `confirmed`;
 8. log out and verify dashboard access is rejected;

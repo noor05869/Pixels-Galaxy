@@ -80,7 +80,7 @@ Row Level Security is enabled. Public and authenticated browser roles receive no
 
 ## Email Notification
 
-After persistence succeeds, Resend sends an HTML and plain-text email to `hello@pixelsgalaxy.com` with subject `New COD Order — <order number>`.
+After persistence succeeds, Resend sends an HTML and plain-text email to `support@pixelsgalaxy.com` with subject `New COD Order — <order number>`.
 
 The message includes the public order number, timestamp, customer delivery details, itemized order, PKR total, payment method, and dashboard link. It must escape customer-provided content before inserting it into HTML.
 
@@ -125,7 +125,7 @@ The implementation documents these required values:
 - `SUPABASE_URL`;
 - `SUPABASE_SECRET_KEY`;
 - `RESEND_API_KEY`;
-- `ORDER_NOTIFICATION_EMAIL=hello@pixelsgalaxy.com`;
+- `ORDER_NOTIFICATION_EMAIL=support@pixelsgalaxy.com`;
 - `ORDER_FROM_EMAIL`, using a verified sending domain;
 - `ADMIN_PASSWORD_HASH`;
 - `ADMIN_SESSION_SECRET`.
