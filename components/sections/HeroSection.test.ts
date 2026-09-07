@@ -8,8 +8,9 @@ describe("HeroSection", () => {
   it("presents the two-piece offer with free Pakistan-wide delivery", () => {
     const markup = renderToStaticMarkup(createElement(HeroSection));
 
-    expect(markup).toContain("MORE MAGIC, TOGETHER");
-    expect(markup).toContain("PICK ANY 2");
+    expect(markup).toContain("STRING SHOOTER TOY");
+    expect(markup).toContain("2 KU STRINGS");
+    expect(markup).toContain("MIX ANY COLOURS");
     expect(markup).toContain("PKR 3,500");
     expect(markup).toContain("FREE DELIVERY");
     expect(markup).toContain("CHOOSE YOUR COLOURS");
