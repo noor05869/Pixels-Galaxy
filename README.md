@@ -47,3 +47,10 @@ Only the public storefront belongs in the sitemap. Checkout, admin, order-detail
 Follow [docs/checkout-setup.md](docs/checkout-setup.md) before deployment. It covers all Supabase migrations, RLS verification, Resend SPF/DKIM setup, masked administrator password hashing, session-secret generation, trusted edge headers, direct-origin protection, deployment, backups, privacy, and the end-to-end verification checklist.
 
 The browser sends only product IDs, bundle IDs, quantities, and checkout contact/delivery fields to this application. Prices and totals are recalculated from the server catalogue. Supabase and Resend credentials, the administrator hash, and the session signing secret must remain server-only.
+# Pixels Galaxy Storefront
+
+![Next.js](https://img.shields.io/badge/Next.js-000000?logo=nextdotjs&logoColor=white)
+![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?logo=typescript&logoColor=white)
+![Supabase](https://img.shields.io/badge/Supabase-3FCF8E?logo=supabase&logoColor=white)
+
+Pixels Galaxy is a Next.js storefront...
