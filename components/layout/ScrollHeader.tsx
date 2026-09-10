@@ -20,5 +20,5 @@ export function ScrollHeader({ children }: { children: React.ReactNode }) {
     addEventListener("scroll", onScroll, { passive: true });
     return () => { removeEventListener("scroll", onScroll); if (frame) cancelAnimationFrame(frame); };
   }, []);
-  return <div className="scroll-header" data-scroll-state={state}>{children}</div>;
+  return <div className="sticky top-0 z-[80] will-change-transform transition-[transform,filter] duration-[260ms] [transition-timing-function:cubic-bezier(.22,1,.36,1)] data-[scroll-state=hidden]:-translate-y-[110%] data-[scroll-state=shown]:translate-y-0 data-[scroll-state=shown]:drop-shadow-[0_10px_18px_rgba(2,16,50,.25)] motion-reduce:transition-none" data-scroll-state={state}>{children}</div>;
 }

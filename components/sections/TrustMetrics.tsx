@@ -1,4 +1,4 @@
 import { Award, Globe2, ShieldCheck, Sparkles } from "lucide-react";
 import { trustMetrics } from "@/lib/storefront/content";
 const icons = [ShieldCheck, Sparkles, Globe2, Award];
-export function TrustMetrics() { return <section className="trust-grid" aria-label="Why Pixels Galaxy">{trustMetrics.map((item, index) => { const Icon = icons[index]; return <article key={item.value}><Icon /><strong>{item.value}</strong><span>{item.label}</span></article>; })}</section>; }
+export function TrustMetrics() { return <section className="mx-auto my-5 grid w-[min(calc(100%_-_48px),1320px)] grid-cols-4 gap-4 max-[850px]:w-[min(calc(100%_-_24px),1320px)] max-[850px]:grid-cols-2" aria-label="Why Pixels Galaxy">{trustMetrics.map((item, index) => { const Icon = icons[index]; return <article className="grid min-h-[130px] place-items-center content-center gap-2 rounded-lg border border-[#2c3943] bg-[#131c24] text-center [&_svg]:text-orange [&_strong]:text-sm [&_span]:text-[13px] [&_span]:opacity-80" key={item.value}><Icon /><strong>{item.value}</strong><span>{item.label}</span></article>; })}</section>; }
