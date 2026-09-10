@@ -4,15 +4,15 @@ import { siteContent } from "@/lib/storefront/content";
 
 export function HeroSection() {
   const { hero } = siteContent;
-  return <section className="hero">
-    <Image className="hero-banner" src="/photos/ku-string-bundle-hero.png" alt="Blue and pink Ku String toys with glowing loop ropes" fill priority sizes="(max-width: 850px) 100vw, 1440px" />
-    <div className="hero-overlay">
-      <p><span className="hero-live-dot" />{hero.eyebrow}</p>
-      <h1>{hero.title}</h1>
-      <div className="hero-offer"><span>2 KU STRINGS</span><strong>PKR 3,500</strong><small>Save PKR 498</small></div>
-      <span className="hero-deck">{hero.note}</span>
-      <a className="button button-orange hero-cta" href="#featured">{hero.cta}<ArrowRight /></a>
+  return <section className="relative m-0 min-h-[clamp(590px,57vw,800px)] w-full overflow-hidden border-0 bg-[#080b10] after:absolute after:inset-0 after:content-[''] after:bg-[linear-gradient(90deg,rgba(7,10,15,.96)_0%,rgba(7,10,15,.76)_40%,rgba(7,10,15,.12)_72%),linear-gradient(0deg,rgba(7,10,15,.78),transparent_48%)] max-[850px]:min-h-[650px] max-[540px]:min-h-[710px]">
+    <Image className="absolute inset-0 size-full object-cover [filter:saturate(.82)_contrast(1.08)_brightness(.82)]" src="/photos/ku-string-bundle-hero.png" alt="Blue and pink Ku String toys with glowing loop ropes" fill priority sizes="(max-width: 850px) 100vw, 1440px" />
+    <div className="absolute bottom-[clamp(120px,15vw,178px)] left-[clamp(30px,6vw,90px)] z-[2] max-w-[720px] max-[850px]:bottom-[146px] max-[540px]:bottom-[170px] max-[540px]:left-6 max-[540px]:right-6">
+      <p className="m-0 flex items-center gap-2.5 text-[11px] font-[800] tracking-[.2em] text-lime"><span className="size-[7px] rounded-full bg-lime shadow-[0_0_16px_rgba(217,255,87,.85)]" />{hero.eyebrow}</p>
+      <h1 className="mb-[22px] mt-[17px] max-w-[680px] text-[clamp(54px,7vw,100px)] font-[700] leading-[.86] tracking-[-.065em] text-warm-white max-[850px]:text-[58px] max-[540px]:text-[48px]">{hero.title}</h1>
+      <div className="mb-4 flex w-max max-w-full items-center gap-3.5 rounded-[7px] border border-[rgba(217,255,87,.34)] bg-[rgba(9,14,19,.7)] px-3 py-2.5 shadow-[0_14px_34px_rgba(0,0,0,.2)] backdrop-blur-[8px] max-[540px]:gap-2"><span className="text-[10px] font-[800] tracking-[.15em] text-[#aab4bc]">2 KU STRINGS</span><strong className="text-[22px] tracking-[-.03em] text-lime max-[540px]:text-[18px]">PKR 3,500</strong><small className="rounded bg-lime px-2 py-1.5 text-[9px] font-[900] uppercase text-navy max-[540px]:hidden">Save PKR 498</small></div>
+      <span className="mb-7 block max-w-[540px] text-[15px] font-[600] leading-[1.55] text-[#aab4bc] max-[540px]:max-w-[300px] max-[540px]:text-[13px]">{hero.note}</span>
+      <a className="inline-flex items-center gap-[18px] rounded px-6 py-[17px] text-[13px] font-[1000] text-navy outline-offset-4 transition-[background,color,transform] duration-[180ms] bg-lime border border-lime hover:bg-transparent hover:text-lime focus-visible:bg-transparent focus-visible:text-lime focus-visible:outline-[3px] focus-visible:outline-white [&_svg]:transition-transform [&_svg]:duration-[180ms] hover:[&_svg]:translate-x-[5px] focus-visible:[&_svg]:translate-x-[5px]" href="#featured">{hero.cta}<ArrowRight /></a>
     </div>
-    <div className="hero-specs" aria-label="Ku string offer highlights"><span><b>01</b>FREE DELIVERY</span><span><b>02</b>MIX ANY COLOURS</span><span><b>03</b>CASH ON DELIVERY</span></div>
+    <div className="absolute bottom-7 left-[clamp(30px,6vw,90px)] right-[clamp(80px,7vw,110px)] z-[3] grid grid-cols-3 border-t border-[rgba(244,242,233,.2)] [&>span]:flex [&>span]:gap-3 [&>span]:py-[18px] [&>span]:text-[11px] [&>span]:font-[800] [&>span]:tracking-[.16em] [&>span]:text-warm-white [&>span+span]:border-l [&>span+span]:border-[rgba(244,242,233,.2)] [&>span+span]:pl-6 [&_b]:text-[10px] [&_b]:font-[600] [&_b]:text-[#6d7a84] max-[850px]:left-6 max-[850px]:right-[78px] max-[850px]:[&>span+span]:pl-3.5 max-[540px]:bottom-8 max-[540px]:right-[70px] max-[540px]:grid-cols-1 max-[540px]:[&>span]:py-2 max-[540px]:[&>span+span]:border-l-0 max-[540px]:[&>span+span]:pl-0" aria-label="Ku string offer highlights"><span><b>01</b>FREE DELIVERY</span><span><b>02</b>MIX ANY COLOURS</span><span><b>03</b>CASH ON DELIVERY</span></div>
   </section>;
 }
